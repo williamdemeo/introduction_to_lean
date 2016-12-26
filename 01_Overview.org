@@ -2,3 +2,504 @@
 #+Author: [[http://www.andrew.cmu.edu/user/avigad][Jeremy Avigad]], [[http://leodemoura.github.io][Leonardo de Moura]], [[https://gebner.org/][Gabriel Ebner]], and Sebastian Ullrich
 
 * Overview
+:PROPERTIES:
+  :CUSTOM_ID: Overview
+:END:
+
+This introduction offers a tour of Lean and its features,
+with a number of examples for you to play around with and explore. If
+you are reading this in our online tutorial system, you can run
+examples like the one below by clicking the button that says "try it
+yourself."
+#+BEGIN_SRC lean
+check "hello world!"
+#+END_SRC
+The response from Lean appears in the small window underneath the
+editor text, and also in popup windows that you can read when you
+hover over the indicators in the left margin. Alternatively, if you
+have installed Lean and have it running in a stand-alone editor, you
+can copy and paste examples and try them there.
+
+** Characterizing Lean
+
+Lean is an implementation of a logical foundation known as /dependent
+type theory/. Specifically, it implements a version of dependent type
+theory known as the /Calculus of Inductive Constructions/. The /CIC/
+is a formal language with a small and precise set of rules that
+governs the formation of expressions. In this formal system, moreover,
+every expression has a /type/. The type of expression indicates what
+sort of object the expression denotes. For example, an expression may
+denote a mathematical object like a natural number, a data type, an
+assertion, or a proof.
+
+Lean has a small and carefully written kernel, which serves to check
+that an expression is well-formed and confirm that it has a given
+type. It is this kernel that gives Lean its special character.
+Dependent type theory serves as a foundational language, allowing us
+to describe all sorts of objects and prove things about them. The
+foundational language fixes the meaning of the objects we introduce,
+and the kernel ensures that the things we prove about them are
+correct.
+
+Put simply, Lean is designed to help you construct, manipulate, and
+check expressions in this foundational language. This may not sound
+like much, but what makes the system powerful is the fact that
+dependent type theory is expressive enough to allow us to define and
+reason about all sorts of objects. For example, Lean's standard
+library defines the natural numbers to be the structure generated
+freely and inductively by a constant, /zero/, and a unary function
+/succ/:
+#+BEGIN_SRC lean
+namespace hide
+
+-- BEGIN
+inductive nat : Type
+| zero : nat
+| succ : nat → nat
+-- END
+
+end hide
+#+END_SRC 
+If you copy this definition into the editor window at right you will
+see that we have wrapped it in a /namespace/ to avoid conflicting with
+the standard definition, which is loaded by default. Even so, choosing
+the name =nat= means that within the namespace this identifier is
+overloaded, which can cause confusion. Thus we will do this only
+sparingly, for purposes of illustration. 
+
+Having specified this data type, we can go on to define addition by
+recursion on the second argument:
+#+BEGIN_SRC lean
+namespace hide
+
+inductive nat : Type
+| zero : nat
+| succ : nat → nat
+
+-- BEGIN
+def add : nat → nat → nat
+| m nat.zero     := m
+| m (nat.succ n) := nat.succ (add m n)
+-- END
+
+end hide
+#+END_SRC
+Lean compiles definitions like these down to a single axiomatic
+primitive that governs use of both induction and recursion on
+inductively defined structures. The library defines notation for the
+data type, as well as for =zero= and =add=. (In fact, Lean uses /type
+classes/, a very handy mechanism used by functional programming
+languages like Haskell, to share notation and properties across
+algebraic structures.) Lean uses the unicode =ℕ= as alternative
+notation for the type =nat=. You can enter this in an editor by
+writing =\nat=.
+
+Of course, we can also define non-recursive functions by giving an
+explicit definition:
+#+BEGIN_SRC lean
+def double (n : ℕ) : ℕ := n + n
+#+END_SRC
+We can then go on to define other data types like the integers, the
+rationals, and the real numbers, the booleans, characters and strings,
+lists, products, disjoint sums, and so on. We can also define
+algebraic structures like groups, rings, fields, vector spaces, and
+categories. In fact, dependent type theory was designed to serve as a
+foundation for all conventional mathematics.
+
+The points to a first intended use of Lean: it serves as a
+/specification language/, that is, a means to specify and define
+mathematical objects in precise terms. With these specifications, Lean
+can interpret basic objects and infer their types:
+#+BEGIN_SRC lean
+check (27 + 9) * 33
+check [(1, 2), (3, 4), (5, 6)] ++ [(7, 8), (9, 10)]
+#+END_SRC
+When there is no other information present to constrain the type of a
+numeral, Lean assumes it denotes a natural, by default. Thus Lean can
+recognize that the first expression denotes a natural number, and that
+the second, a concatenation of two lists of pairs of natural numbers,
+is again a list of pairs. It also remembers that =double= is a
+function from the natural numbers to the natural numbers, and can
+print out the definition when requested to do so:
+#+BEGIN_SRC lean
+def double (n : ℕ) : ℕ := n + n
+
+-- BEGIN
+check double
+print double
+-- END
+#+END_SRC
+Lean can reason about abstract objects as well as it can reason about
+concrete ones. In the following example, we declare a type =G= with a
+group structure, and variables =g₁= and =g₂= that range over =G=. With
+those declarations, Lean knows that the expression =g₂⁻¹ * g₁ * g₂=
+denotes an element of =G=. 
+#+BEGIN_SRC lean
+section
+  variables (G : Type) [group G]
+  variables g₁ g₂ : G
+
+  check g₂⁻¹ * g₁ * g₂
+end
+#+END_SRC
+Putting the declarations in a =section=, as we do here, delimits their
+scope. In this case, the section declaration is not needed, and no
+harm would be done if we had declared these variables at the top
+level.
+
+An important feature of dependent type theory is that every expression
+has a computational interpretation, which is to say, there are rules
+that specify how can be /reduced/ to a normal form. Moreover,
+expressions in a pure fragment of the language evaluate to canonical
+forms. For example, every closed term of type =ℕ= evaluates to a
+numeral. Lean's kernel can carry out this evaluation:
+#+BEGIN_SRC lean
+eval (27 + 9) * 33
+#+END_SRC
+As part of the kernel, the results of this evaluation can be highly
+trusted. The evaluator is not very efficient, however, and is not
+intended to be used for substantial computational tasks. For that
+purposes, Lean also generates bytecode for every definition of a
+computable object, and can evaluate it on demand. To process the
+bytcode quickly, it uses an efficient /virtual machine/, similar to
+ones used to interpret Ocaml and Python.
+#+BEGIN_SRC lean
+def double (n : ℕ) : ℕ := n + n
+
+-- BEGIN
+vm_eval (27 + 9) * 33
+vm_eval (2227 + 9999) * 33
+vm_eval double 9999
+vm_eval [(1, 2), (3, 4), (5, 6)] ++ [(7, 8), (9, 10)]
+-- END
+#+END_SRC
+Relying on results from the bytecode evaluator requires a higher level
+of trust than relying on the kernel. For example, for efficiency, the
+bytecode evaluator usses the Gnu multiprecision library to carry out
+numerical computations involving the natural numbers and integers, so
+the correctness of those computations are no longer underwritten by
+the axiomatic foundation.
+
+This points to a second intended use of Lean, namely, as a
+/programming language/. Because dependent type theory is so
+expressive, we can make use of all the usual method and techniques of
+functional programming, including higher types, type classes, records,
+monads, and other abstractions. In fact, we have the entire Lean
+library at our disposal. With just a few lines of code, we can write a
+generic sort procedure that sorts elements of a list according to a
+specified binary relation =r= an on arbitrary type =α=, assuming only
+that we can determine computationally when =r= holds.
+#+BEGIN_SRC lean
+section sort
+universe variable u
+parameters {α : Type u} (r : α → α → Prop) [decidable_rel r]
+local infix `≼` : 50 := r
+
+def ordered_insert (a : α) : list α → list α
+| []       := [a]
+| (b :: l) := if a ≼ b then a :: (b :: l) else b :: ordered_insert l
+
+def insertion_sort : list α → list α
+| []       := []
+| (b :: l) := ordered_insert b (insertion_sort l)
+
+end sort
+#+END_SRC
+For foundational reasons, types in Lean have to be stratified into a
+heirarchy of /type universes/, and the definitions above work for any
+type =α= in any such universe. We can run the procedure above on a
+list of natural numbers, using the usual ordering:
+#+BEGIN_SRC lean
+section sort
+universe variable u
+parameters {α : Type u} (r : α → α → Prop) [decidable_rel r]
+local infix `≼` : 50 := r
+
+def ordered_insert (a : α) : list α → list α
+| []       := [a]
+| (b :: l) := if a ≼ b then a :: (b :: l) else b :: ordered_insert l
+
+def insertion_sort : list α → list α
+| []       := []
+| (b :: l) := ordered_insert b (insertion_sort l)
+
+end sort
+
+-- BEGIN
+vm_eval insertion_sort (λ m n : ℕ, m ≤ n) [5, 27, 221, 95, 17, 43, 7, 2, 98, 567, 23, 12]
+-- END
+#+END_SRC
+Substantial programs can be written in Lean and run by the bytecode
+interpreter. In fact, a full-blown resolution theorem prover has been
+written in Lean, and can be found in the =tools= folder of the
+library. (We will say more about this below.) A procedure which
+translates code written into Lean into C++ is also under
+development. Executing code written in this way requires trusting that
+the translation is faithful to the semantics of the source expressions
+in Lean, as well as trusting the C++ compiler (and, of course, the
+hardware and enviroment in which the code is run). The advantage is
+that at least the source of the translation has been specified in a
+fully precise way, making it possible to reason about its intended
+behavior.
+
+Which brings us to a third, and central, intended use of Lean: namely
+we can make assertions about the objects we define and then go on to
+prove those assertions. We can do this because the language of
+dependent type theory is rich enough to encode such assertions and
+proofs. For example, we can express the property that a natural number
+is even:
+#+BEGIN_SRC lean
+def even (n : ℕ) : Prop := ∃ m, n = 2 * m
+#+END_SRC
+As presented, it is not clear that the property of begin even is
+decidable, since we cannot in general test ever natural number to
+determine whether any of them serves as a witness to the given
+existential statement. But we can nonetheless use this definition to
+form compound statements:
+#+BEGIN_SRC lean
+def even (n : ℕ) : Prop := ∃ m, n = 2 * m
+
+-- BEGIN
+check even 10
+check even 11
+check ∀ n, even n ∨ even (n + 1)
+check ∀ n m, even n → even m → even (n + m)
+-- END
+#+END_SRC
+In each case, the expression has type =Prop=, indicating the Lean
+recognizes it as an assertion.
+
+Incidentally, of course, we do know that the property of being =even
+n= is algorithmically decidable. We can develop any algorithm we want
+for that purpose. Provided we can prove that it behaves as advertised,
+we can then use Lean's type class mechanism to associate this decision
+procedure to the predicate. Once we do so, we can use the predicate
+=even= in conditional statements in any program.
+
+# TODO: when there is more in the library, show that we can use even
+# in computable definitions, and in a later chapter, give examples
+# that illustrate how it works.
+
+In any case, in order to /prove/ assertions like the ones above (at
+least, the ones that are true), we need a proof language. Fortunately,
+dependent type theory can play that role: proofs are nothing more than
+certain kinds of expressions in the formal language. In the encoding
+used, if =p= is any proposition, a proof of =p= is just an expression
+=e= of type =p=. Thus, in Lean, checking a proof is just a special
+case of checking that an expression is well-formed and has a given
+type. We can prove that 10 is even as follows:
+#+BEGIN_SRC lean
+def even (n : ℕ) : Prop := ∃ m, n = 2 * m
+
+-- BEGIN
+example : even 10 := ⟨5, rfl⟩
+-- END
+#+END_SRC
+In general, to prove an existential statement, it is enough to present
+a witness to the existential quantifier and then show that the
+subsequent claim is true of that witness. The unicode angle brackets
+just packages this data together; you can enter them in an editor with
+=\<= and =\>=, or use the ascii equivalents =(|= and =|)=. The second
+component, =rfl=, is short for reflexivity. Lean's kernel can verify
+that =10 = 2 * 5= by reducing both sides and confirming that they are,
+in fact, identical. (For longer expressions, Lean's simplifier, which
+will be discussed below, can do this more efficiently, producing a
+proof instead that carries out the calculation using binary
+representations.)
+
+As noted above, dependent type theory is designed to serve as a
+mathematical foundation, so that any conventional mathematical
+assertion can be reasonably expresssed, and any theorem that can be
+proved using conventional mathematical means can be carried out
+formally, with enough effort. Here is a proof that the sum of two even
+numbers is even:
+#+BEGIN_SRC lean
+def even (n : ℕ) : Prop := ∃ m, n = 2 * m
+
+-- BEGIN
+theorem even_add : ∀ m n, even m → even n → even (n + m) :=
+take m n,
+assume ⟨k, (hk : m = 2 * k)⟩,
+assume ⟨l, (hl : n = 2 * l)⟩,
+have n + m = 2 * (k + l),
+  by simp [hk, hl, mul_add],
+show even (n + m),
+  from ⟨_, this⟩
+-- END
+#+END_SRC
+Again, we emphasize that the proof is really just an expression in
+dependent type theory, presenting with syntactic sugar that makes it
+look somewhat like any informal mathematical proof. There is also a
+tiny bit of automated reasoning thrown in: the command =by simp= calls
+on Lean's built-in simplifier to prove the assertion after the =have=,
+using the two facts labelled =hk= and =hl=, and the distributivity of
+multiplication over addition.
+
+Lean supports another style of writing proofs, namely, using
+/tactics/. These are instructions, or procedures, that tell Lean how
+to construct the requisite expression. Here is a tactic-style proof of
+the theorem above:
+#+BEGIN_SRC lean
+def even (n : ℕ) : Prop := ∃ m, n = 2 * m
+
+-- BEGIN
+theorem even_add : ∀ m n, even m → even n → even (n + m) :=
+begin
+  intros m n hm hn,
+  cases hm with k hk,
+  cases hn with l hl,
+  unfold even,
+  existsi (k + l),
+  simp [hk, hl, mul_add]
+end
+-- END
+#+END_SRC
+
+Just as we can prove statements about the natural numbers, we can also
+reason about computer programs written in Lean, because these, too,
+are no different from any other definitions. This enables specify
+properties of computer programs, prove that the programs meet their
+specifications, and run the code with confidence that the results mean
+what we think they mean.
+
+# TODO: it would be nice if, in a later chapter, we can give a short
+# example of verifying insertion sort -- maybe using super? -- and
+# refer to that here.
+
+The use of =simp= in the proof above points to another aspect of Lean,
+namely, that it can serve as a gateway to the use of automated
+reasoning. Terms in dependent type theory can be very verbose, and
+formal proofs can be especially long. One of Lean's strengths is that
+it can help you construct these terms, and hide the details from
+you. We have already seen hints is this: in the examples above, Lean
+inferred the fact that the natural numbers form an instance of
+semiring in order to make use of the theorem =mul_add=, it found a
+procedure for comparing two natural numbers when we applied
+=insertion_sort= with the less-than ordering, and it did some work
+behind the scenes (though in this case, not much) when transforming
+the recursive specification of addition on the natural numbers to a
+formal definition. But a central goal of the Lean project is to
+develop powerful automation that will consist in the verification of
+programs and the construction of proofs as well.
+
+# TODO: say something more about the present state -- what the
+# simplifier can do, and refer to a later chapter that discusses it in
+# more detail.
+
+# TODO: say something about super here, and add examples?
+
+# TODO: when we can be more compelling about this, say something about
+# using Lean not just to prove things, but to discover things as
+# well, e.g. to solve constraints, find truth assignments, etc. 
+
+It is the tactic framework that serves as a gateway to the use of
+automation. Lean provides means of implemeting automated reasoning
+procedures in such a way that the produce formal proofs that their
+results are correct. This imposes an extra burden on the
+implementation, but it comes with benefits as well: automated
+procedures can make full use of the Lean library and API, and the
+formal justifications they produce provide a strong guarantee that the
+results are indeed correct.
+
+Which brings us to yet another aspect of Lean, namely, its role as a
+/metaprogramming language/. Many of Lean's internal data structures
+and procedures are exposed and available within the language of Lean
+itself, via a monadic interface. We refer to the use of these
+procedures as "metaprogramming" because they take us outside formal
+framework: the access points to the API are declared as constants, and
+the formal framework knows nothing about them, other than their
+type. Lean keeps track of which objects in the environment are part of
+the trusted kernel and which make use of this special API, and
+requires us to annotate the latter definitions with the special
+keyword =meta=. The virtual machine, however, handled calls to the API
+appropriately. This makes it possible to write Lean tactics in Lean
+itself.
+
+For example, the procedure =contra_aux= searches through two lists of
+expressions, assumed to be hypothesis available in the context of a
+tactic proof, in search of a pair of the form =h₁ : p= and =h₂ : ¬
+p=. When it finds such a pair, it uses it to produce a proof of the
+resulting theorem. The procedure =contra= then applies =contra_aux= to
+the hypotheses in the local context.
+#+BEGIN_SRC lean
+open expr tactic
+
+private meta def contra_aux : list expr → list expr → tactic unit
+| []         hs := failed
+| (h₁ :: rs) hs :=
+  do t₀ ← infer_type h₁,
+     t  ← whnf t₀,
+     (do a ← match_not t,
+         h₂ ← find_same_type a hs,
+         tgt ← target,
+         pr ← mk_app `absurd [tgt, h₂, h₁],
+         exact pr)
+     <|> contra_aux rs hs
+
+meta def contra : tactic unit :=
+do ctx ← local_context,
+   contra_aux ctx ctx
+#+END_SRC
+Having defined this procedure, we can then use it to prove theorems:
+#+BEGIN_SRC lean
+open expr tactic
+
+private meta def contra_aux : list expr → list expr → tactic unit
+| []         hs := failed
+| (h₁ :: rs) hs :=
+  do t₀ ← infer_type h₁,
+     t  ← whnf t₀,
+     (do a ← match_not t,
+         h₂ ← find_same_type a hs,
+         tgt ← target,
+         pr ← mk_app `absurd [tgt, h₂, h₁],
+         exact pr)
+     <|> contra_aux rs hs
+
+meta def contra : tactic unit :=
+do ctx ← local_context,
+   contra_aux ctx ctx
+
+-- BEGIN
+example (p q r : Prop) (h₁ : p ∧ q) (h₂ : q → r) (h₃ : ¬ (p ∧ q)) : r :=
+by contra
+-- END
+#+END_SRC
+The results of such a tactic are always checked by the Lean kernel, so
+they can be trusted, even if the code itself is buggy. If the kernel
+fails to type check the resulting term, it raises an error, and the
+resulting theorem is not added to the environment.
+
+Substantial tactics can be written in such a way, even, as noted
+above, a full-blown resolution theorem prover. Indeed, many of Lean's
+core tactics /are/ implemented in Lean itself. The code from =contra=
+above is, in fact, part of the =contradiction= tactic that is part of
+Lean's standard library. Thus Lean offers not only a language for
+expressing not just mathematical knowledge, construed as a body of
+definitions and theorems, but also other kinds of mathematical
+expertise, namely the algorithms, procedures, and heuristics that are
+part and parcel of mathematical understanding.
+
+** Where to go from here
+
+We have surveyed a number of ways that Lean can be used, namely, as
+- a specification language
+- a programming language
+- an assertion language
+- a proof language
+- a gateway to using automation with fully verified results, and
+- a metaprogramming language.
+Subsequent chapters provide a compendium of examples for you to play
+with and enjoy. These chapters are fairly short on explanation,
+however, and are not meant to serve as definitive references. If you
+are motivated to continue using Lean in earnest, we recommend
+continuing, from here, to either of the following more expansive
+introductions:
+
+- [[https://github.com/leanprover/theorem_proving_in_lean][Theorem Proving in Lean]]
+- [[https://leanprover.github.io/programming_in_lean/][Programming in Lean]]
+
+The first focuses on the use of Lean as a theorem prover, whereas
+the second focuses on aspects of Lean related to programming and
+metaprogramming.
+
