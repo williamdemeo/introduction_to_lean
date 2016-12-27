@@ -59,13 +59,13 @@ inductive nat : Type
 -- END
 
 end hide
-#+END_SRC 
+#+END_SRC
 If you copy this definition into the editor window at right you will
 see that we have wrapped it in a /namespace/ to avoid conflicting with
 the standard definition, which is loaded by default. Even so, choosing
 the name =nat= means that within the namespace this identifier is
 overloaded, which can cause confusion. Thus we will do this only
-sparingly, for purposes of illustration. 
+sparingly, for purposes of illustration.
 
 Having specified this data type, we can go on to define addition by
 recursion on the second argument:
@@ -133,7 +133,7 @@ Lean can reason about abstract objects as well as it can reason about
 concrete ones. In the following example, we declare a type =G= with a
 group structure, and variables =g₁= and =g₂= that range over =G=. With
 those declarations, Lean knows that the expression =g₂⁻¹ * g₁ * g₂=
-denotes an element of =G=. 
+denotes an element of =G=.
 #+BEGIN_SRC lean
 section
   variables (G : Type) [group G]
@@ -175,7 +175,7 @@ vm_eval [(1, 2), (3, 4), (5, 6)] ++ [(7, 8), (9, 10)]
 #+END_SRC
 Relying on results from the bytecode evaluator requires a higher level
 of trust than relying on the kernel. For example, for efficiency, the
-bytecode evaluator usses the Gnu multiprecision library to carry out
+bytecode evaluator usses the GNU multiple precision library to carry out
 numerical computations involving the natural numbers and integers, so
 the correctness of those computations are no longer underwritten by
 the axiomatic foundation.
@@ -390,7 +390,7 @@ programs and the construction of proofs as well.
 
 # TODO: when we can be more compelling about this, say something about
 # using Lean not just to prove things, but to discover things as
-# well, e.g. to solve constraints, find truth assignments, etc. 
+# well, e.g. to solve constraints, find truth assignments, etc.
 
 It is the tactic framework that serves as a gateway to the use of
 automation. Lean provides means of implemeting automated reasoning
@@ -502,4 +502,3 @@ introductions:
 The first focuses on the use of Lean as a theorem prover, whereas
 the second focuses on aspects of Lean related to programming and
 metaprogramming.
-
