@@ -147,11 +147,13 @@ scope. In this case, the section declaration is not needed, and no
 harm would be done if we had declared these variables at the top
 level.
 
-An important feature of dependent type theory is that every expression
-has a computational interpretation, which is to say, there are rules
-that specify how can be /reduced/ to a normal form. Moreover,
-expressions in a pure fragment of the language evaluate to canonical
-forms. For example, every closed term of type =ℕ= evaluates to a
+An important feature of dependent type theory is that expressions have
+computational interpretation, which is to say, there are rules that
+specify they how can be /reduced/ to a normal form. Moreover,
+expressions in a computationally pure fragment of the language
+evaluate to /values/ in the way you would expect. For example,
+assuming the definition does not depend on nonconstructive components
+in an essential way, every closed term of type =ℕ= evaluates to a
 numeral. Lean's kernel can carry out this evaluation:
 #+BEGIN_SRC lean
 eval (27 + 9) * 33
