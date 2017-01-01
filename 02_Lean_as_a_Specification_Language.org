@@ -717,6 +717,9 @@ check square a * square b
 #+END_SRC
 
 ** Nonconstructive Definitions
+:PROPERTIES:
+  :CUSTOM_ID: Nonconstructive_Definitions
+:END:
 
 Lean allows us to to define nonconstructive functions using familiar
 classical principles, provided we mark the associated definitions as
