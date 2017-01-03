@@ -545,27 +545,35 @@ in a later chapter.
 
 # TODO(Jeremy): add reference when the chapter exists.
 
-# TODO(Jeremy): add this section and example when IO is working correctly 
-# ** Input and Output
+** Input and Output
 
-# #+BEGIN_SRC lean
-# import system.io
+Lean can access standard input and output via a special =io=
+monad. From within the foundational system, the functions =put_str=
+and =get_str= are simply unaxiomatized constants, but when executed by
+the virtual machine, the perform the desired operations.
 
-# def hanoi_aux : ℕ → string → string → string → io unit
-# | 0     from_peg to_peg aux_peg :=
-#   put_str "nothing to do!\n"
-# | 1     from_peg to_peg aux_peg :=
-#   put_str ("move disk 1 from " ++ from_peg ++ " to " ++ to_peg ++ "\n")
-# | (n+2) from_peg to_peg aux_peg :=
-#   do hanoi_aux (n+1) from_peg aux_peg to_peg,
-#      put_str ("move disk " ++ to_string (n+2) ++ " from " ++ from_peg ++
-#               " to " ++ to_peg ++ "\n"),
-#      hanoi_aux (n+1) aux_peg to_peg from_peg
+The input faculty can only be used when running Lean from a command
+line, but standard output is associated to function calls in the
+editor. The following example uses the =io= monad to output a list of
+instructions solving the /Tower of Hanoi/ game for any number of
+disks.
 
-# def hanoi (n : ℕ) := hanoi_aux n "peg one" "peg two" "peg three"
+#+BEGIN_SRC lean
+import system.io
 
-# vm_eval hanoi 5
-# #+END_SRC
+def hanoi_aux : ℕ → string → string → string → io unit
+| 0     fr to aux := put_str "nothing to do!\n"
+| 1     fr to aux := put_str ("move disk 1 from " ++ fr ++ " to " ++ 
+                               to ++ "\n")
+| (n+2) fr to aux := do hanoi_aux (n+1) fr aux to,
+                        put_str ("move disk " ++ to_string (n+2) ++ 
+                                 " from " ++ fr ++ " to " ++ to ++ "\n"),
+                        hanoi_aux (n+1) aux to fr
+
+def hanoi (n : ℕ) := hanoi_aux n "A" "B" "C"
+
+vm_eval hanoi 5
+#+END_SRC
 
 ** An Example: Abstract Syntax
 
