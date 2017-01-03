@@ -272,8 +272,9 @@ def fact : ℕ → ℕ
 | (n+1) := (n+1) * fact n
 #+END_SRC
 Lean will compile definitions like these down to the primitives of the
-Calculus of Inductive Constructions, though in the case of =fact= the
-translation is straightforward.
+Calculus of Inductive Constructions, though in the case of =fact= it
+is straightforward to define it from the primitive recursion principle
+directly.
 
 Lean's function definition system can handle more elaborate forms of
 pattern matching with defaults. For example, the following function
@@ -293,13 +294,16 @@ def fib : ℕ → ℕ
 | 1     := 1
 | (n+2) := fib (n+1) + fib n
 
-vm_eval fib 10
+vm_eval fib 100
 #+END_SRC
-The naive implementation is inefficient : the computation of =fib
-(n+2)= results in two independent computations of =fib n=, one hidden
-in the computation of =fib (n+1)=. As a result, the run time is
-exponential in =n=. A more efficient way to go is to define an
-auxiliary function that computes the values in pairs:
+The naive implementation runs the risk of an exponential run time,
+since the computation of =fib (n+2)= calls for two independent
+computations of =fib n=, one hidden in the computation of =fib
+(n+1)=. In fact, the current Lean compilation scheme avoids this,
+because it joins the recursive falls in a single tuple and evaluates
+them both at once. We can do this explictly, thereby avoiding reliance
+on the inner workings of Lean's function definition system, by
+defining an auxiliary function that computes the values in pairs:
 #+BEGIN_SRC lean
 def fib_aux : ℕ → ℕ × ℕ
 | 0     := (0, 1)
@@ -321,10 +325,6 @@ def fib n := fib_aux n 0 1
 vm_eval fib 100
 #+END_SRC
  
-# TODO(Jeremy): can we profile the results?
-# TODO(Jeremy): make sure the first fib 100 is not too slow in the
-# Javascript version
-
 Functions on lists are naturally defined by structural
 recursion. These definitions are taken from the standard library:
 #+BEGIN_SRC lean
