@@ -498,7 +498,7 @@ are motivated to continue using Lean in earnest, we recommend
 continuing, from here, to either of the following more expansive
 introductions:
 
-- [[https://github.com/leanprover/theorem_proving_in_lean][Theorem Proving in Lean]]
+- [[https://leanprover.github.io/theorem_proving_in_lean][Theorem Proving in Lean]]
 - [[https://leanprover.github.io/programming_in_lean/][Programming in Lean]]
 
 The first focuses on the use of Lean as a theorem prover, whereas
