@@ -482,7 +482,7 @@ definitions and theorems, but also other kinds of mathematical
 expertise, namely the algorithms, procedures, and heuristics that are
 part and parcel of mathematical understanding.
 
-** Where to go from here
+** Where To Go From Here
 
 We have surveyed a number of ways that Lean can be used, namely, as
 - a specification language
