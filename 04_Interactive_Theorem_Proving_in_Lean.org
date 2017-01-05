@@ -1,0 +1,9 @@
+#+Title: An Introduction to Lean
+#+Author: [[http://www.andrew.cmu.edu/user/avigad][Jeremy Avigad]], [[http://leodemoura.github.io][Leonardo de Moura]], [[https://gebner.org/][Gabriel Ebner]], and Sebastian Ullrich
+
+* Interactive Theorem Proving in Lean
+:PROPERTIES:
+  :CUSTOM_ID: Interactive_Theorem_Proving_in_Lean
+:END:
+
+[Under construction.]
