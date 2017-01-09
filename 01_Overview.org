@@ -232,17 +232,26 @@ vm_eval insertion_sort (λ m n : ℕ, m ≤ n) [5, 27, 221, 95, 17, 43, 7, 2, 98
 -- END
 #+END_SRC
 Substantial programs can be written in Lean and run by the bytecode
-interpreter. In fact, a full-blown resolution theorem prover has been
-written in Lean, and can be found in the =tools= folder of the
-library. (We will say more about this below.) A procedure which
-translates code written into Lean into C++ is also under
-development. Executing code written in this way requires trusting that
-the translation is faithful to the semantics of the source expressions
-in Lean, as well as trusting the C++ compiler (and, of course, the
-hardware and enviroment in which the code is run). The advantage is
-that at least the source of the translation has been specified in a
-fully precise way, making it possible to reason about its intended
-behavior.
+interpreter. You can profile your code by setting the relevant options:
+#+BEGIN_SRC lean
+set_option profiler true
+set_option profiler.freq 10
+#+END_SRC
+The second determines the frequency that the virtual machine is
+polled. Be careful: if the task you profile is too short, there won't
+be any output! You can even implement your own [[https://github.com/leanprover/lean/tree/master/library/tools/debugger][debugger]] in Lean
+itself.
+
+In fact, a full-blown resolution theorem prover has been written in
+Lean, and can be found in the [[https://github.com/leanprover/lean/tree/master/library/tools/super][tools]] folder of the library. (We will
+say more about this below.) A procedure which translates code written
+into Lean into C++ is also under development. Executing code written
+in this way requires trusting that the translation is faithful to the
+semantics of the source expressions in Lean, as well as trusting the
+C++ compiler (and, of course, the hardware and enviroment in which the
+code is run). The advantage is that at least the source of the
+translation has been specified in a fully precise way, making it
+possible to reason about its intended behavior.
 
 Which brings us to a third, and central, intended use of Lean: namely
 we can make assertions about the objects we define and then go on to
