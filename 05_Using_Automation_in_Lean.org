@@ -1,9 +1,9 @@
 #+Title: An Introduction to Lean
 #+Author: [[http://www.andrew.cmu.edu/user/avigad][Jeremy Avigad]], [[http://leodemoura.github.io][Leonardo de Moura]], [[https://gebner.org/][Gabriel Ebner]], and Sebastian Ullrich
 
-* Automation in Lean
+* Using Automation in Lean
 :PROPERTIES:
-  :CUSTOM_ID: Automation_in_Lean
+  :CUSTOM_ID: Using Automation_in_Lean
 :END:
 
 [Under construction.]

@@ -1,9 +1,9 @@
 #+Title: An Introduction to Lean
 #+Author: [[http://www.andrew.cmu.edu/user/avigad][Jeremy Avigad]], [[http://leodemoura.github.io][Leonardo de Moura]], [[https://gebner.org/][Gabriel Ebner]], and Sebastian Ullrich
 
-* Lean as a Specification Language
+* Defining Objects in Lean
 :PROPERTIES:
-  :CUSTOM_ID: Lean_as_a_Specification_Language
+  :CUSTOM_ID: Defining_Objects_in_Lean
 :END:
 
 As a foundational framework, the Calculus of Inductive Constructions,

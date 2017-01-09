@@ -20,7 +20,7 @@ hover over the indicators in the left margin. Alternatively, if you
 have installed Lean and have it running in a stand-alone editor, you
 can copy and paste examples and try them there.
 
-** Characterizing Lean
+** Perspectives on Lean
 
 Lean is an implementation of a logical foundation known as /dependent
 type theory/. Specifically, it implements a version of dependent type

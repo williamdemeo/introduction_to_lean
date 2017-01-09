@@ -1,9 +1,9 @@
 #+Title: An Introduction to Lean
 #+Author: [[http://www.andrew.cmu.edu/user/avigad][Jeremy Avigad]], [[http://leodemoura.github.io][Leonardo de Moura]], [[https://gebner.org/][Gabriel Ebner]], and Sebastian Ullrich
 
-* Lean as a Programming Language
+* Programming in Lean
 :PROPERTIES:
-  :CUSTOM_ID: Lean_as_a_Programming_Language
+  :CUSTOM_ID: Programming_in_Lean
 :END:
 
 Lean aims to support both mathematical abstraction alongside pragmatic
@@ -35,7 +35,7 @@ computational information. In contrast, if =α= is an element of =Type
 u= for any =u= greater than 0 and =t : α=, then =t= contains data, and
 can be evaluated.
 
-We saw in [[file:02_Lean_as_a_Specification_Language.org::#Nonconstructive_Definitions][Section 2.5]] that Lean allows us to define functions that
+We saw in [[file:02_Defining_Objects_in_Lean.org::#Nonconstructive_Definitions][Section 2.5]] that Lean allows us to define functions that
 produce data from a proposition =∃ x, p x=, but that such functions
 are marked as =noncomputable=, and do not generate
 bytecode. Expressions =t : α=, where =α= is a type of data, can

@@ -445,7 +445,7 @@ end
 #+END_SRC
 
 Recall the recursive definitions of the =append= and =length=
-functions for lists from [[file:03_Lean_as_a_Programming_Language.org::#Recursive_Definitions][Section 3.2]].
+functions for lists from [[file:03_Programming_in_Lean.org::#Recursive_Definitions][Section 3.2]].
 #+BEGIN_SRC lean
 namespace hide
 open list
