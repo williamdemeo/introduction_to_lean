@@ -164,7 +164,7 @@ def is_punctuation (c : char) : Prop :=
 c ∈ [#" ", #",", #".", #"?", #"!", #";", #"-", #"'"]
 
 instance : decidable_pred is_punctuation :=
-begin unfold is_punctuation, apply_instance end
+take c, show decidable (c ∈ _), by apply_instance
 
 vm_eval to_lower #"X"
 vm_eval to_lower #"x"
@@ -178,6 +178,9 @@ In the example above, we have to tell Lean how to define a decision
 procedure for the predicate =is_punctuation=. We do this simply by
 unfolding the definition and asking Lean to use the inferred decision
 procedure for list membership.
+
+# TODO: restore this when possible (also below)
+# begin unfold is_punctuation, apply_instance end
 
 A string is defined to be a list of characters. Conceptually, the
 characters are stored the list in /reverse order/, which is to say,
@@ -195,7 +198,7 @@ def is_punctuation (c : char) : Prop :=
 c ∈ [#" ", #",", #".", #"?", #"!", #";", #"-", #"'"]
 
 instance : decidable_pred is_punctuation :=
-begin unfold is_punctuation, apply_instance end
+take c, show decidable (c ∈ _), by apply_instance
 
 end char
 
@@ -224,7 +227,7 @@ def is_punctuation (c : char) : Prop :=
 c ∈ [#" ", #",", #".", #"?", #"!", #";", #"-", #"'"]
 
 instance : decidable_pred is_punctuation :=
-begin unfold is_punctuation, apply_instance end
+take c, show decidable (c ∈ _), by apply_instance
 
 end char
 
@@ -251,6 +254,9 @@ end string
 #+END_SRC
 
 ** Recursive Definitions
+:PROPERTIES:
+  :CUSTOM_ID: Recursive_Definitions
+:END:
 
 Lean supports definition of functions by structural recursion on its
 arguments. 
@@ -311,7 +317,7 @@ def fib_aux : ℕ → ℕ × ℕ
 
 def fib n := (fib_aux n).2
 
-vm_eval fib 100
+vm_eval fib 10
 #+END_SRC
 A similar solution is to use additional arguments to accumulate
 partial results:
@@ -324,6 +330,8 @@ def fib n := fib_aux n 0 1
 
 vm_eval fib 100
 #+END_SRC
+
+# TODO(Jeremy): fix the second-to-last example above.
  
 Functions on lists are naturally defined by structural
 recursion. These definitions are taken from the standard library:
