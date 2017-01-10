@@ -148,8 +148,6 @@ vm_eval list.filter (λ x, x > 50) (list.range 100)
 vm_eval list.foldl add 0 (list.range 100) 
 #+END_SRC
 
-# TODO(Jeremy): when we have div and maybe sqrt, define a sieve for primes.
-
 A =char= is a natural number that is less than 255. You can enter the
 character "A," for example, by typing =#"A"=. We can define some basic
 operations on characters:
@@ -164,7 +162,7 @@ def is_punctuation (c : char) : Prop :=
 c ∈ [#" ", #",", #".", #"?", #"!", #";", #"-", #"'"]
 
 instance : decidable_pred is_punctuation :=
-take c, show decidable (c ∈ _), by apply_instance
+begin intro c, unfold is_punctuation, apply_instance end
 
 vm_eval to_lower #"X"
 vm_eval to_lower #"x"
@@ -178,9 +176,6 @@ In the example above, we have to tell Lean how to define a decision
 procedure for the predicate =is_punctuation=. We do this simply by
 unfolding the definition and asking Lean to use the inferred decision
 procedure for list membership.
-
-# TODO: restore this when possible (also below)
-# begin unfold is_punctuation, apply_instance end
 
 A string is defined to be a list of characters. Conceptually, the
 characters are stored the list in /reverse order/, which is to say,
@@ -198,7 +193,7 @@ def is_punctuation (c : char) : Prop :=
 c ∈ [#" ", #",", #".", #"?", #"!", #";", #"-", #"'"]
 
 instance : decidable_pred is_punctuation :=
-take c, show decidable (c ∈ _), by apply_instance
+begin intro c, unfold is_punctuation, apply_instance end
 
 end char
 
@@ -227,7 +222,7 @@ def is_punctuation (c : char) : Prop :=
 c ∈ [#" ", #",", #".", #"?", #"!", #";", #"-", #"'"]
 
 instance : decidable_pred is_punctuation :=
-take c, show decidable (c ∈ _), by apply_instance
+begin intro c, unfold is_punctuation, apply_instance end
 
 end char
 
@@ -317,7 +312,7 @@ def fib_aux : ℕ → ℕ × ℕ
 
 def fib n := (fib_aux n).2
 
-vm_eval fib 10
+vm_eval fib 100
 #+END_SRC
 A similar solution is to use additional arguments to accumulate
 partial results:
@@ -330,8 +325,6 @@ def fib n := fib_aux n 0 1
 
 vm_eval fib 100
 #+END_SRC
-
-# TODO(Jeremy): fix the second-to-last example above.
  
 Functions on lists are naturally defined by structural
 recursion. These definitions are taken from the standard library:
