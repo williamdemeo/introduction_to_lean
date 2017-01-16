@@ -149,7 +149,7 @@ level.
 
 An important feature of dependent type theory is that expressions have
 computational interpretation, which is to say, there are rules that
-specify they how can be /reduced/ to a normal form. Moreover,
+specify how they can be /reduced/ to a normal form. Moreover,
 expressions in a computationally pure fragment of the language
 evaluate to /values/ in the way you would expect. For example,
 assuming the definition does not depend on nonconstructive components
