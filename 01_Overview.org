@@ -208,7 +208,7 @@ def insertion_sort : list α → list α
 end sort
 #+END_SRC
 For foundational reasons, types in Lean have to be stratified into a
-heirarchy of /type universes/, and the definitions above work for any
+hierarchy of /type universes/, and the definitions above work for any
 type =α= in any such universe. We can run the procedure above on a
 list of natural numbers, using the usual ordering:
 #+BEGIN_SRC lean
