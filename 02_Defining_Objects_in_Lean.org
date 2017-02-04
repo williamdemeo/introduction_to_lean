@@ -58,7 +58,7 @@ Remember that, in Lean:
   example, the definition of a defined constant.
 - =eval= can be used to normalize a symbolic expression.
 - =vm_eval= can be used to run the bytecode evaluator on any closed
-  term that has a computational interpretation. 
+  term that has a computational interpretation.
 
 Lean's standard library defines a number of data types, such as =nat=,
 =int=, =list=, and =bool=.
@@ -96,7 +96,7 @@ always specify an intended type =t= for an expression =e= by writing
 an object of the given type, and raises an error if it does not
 succeed.
 #+BEGIN_SRC lean
-check (3 : ℤ) 
+check (3 : ℤ)
 check (3 : ℤ) + 6 * 9
 check (3 + 6 * 9 : ℤ)
 
@@ -106,10 +106,10 @@ vm_eval (3 + 6 * 9 : ℤ)
 We can also declare variables ranging over elements and types.
 #+BEGIN_SRC lean
 variables m n k : ℕ
-variables u v w : ℤ 
+variables u v w : ℤ
 variable  α : Type
 variables l₁ l₂ : list ℕ
-variables s₁ s₂ : list α 
+variables s₁ s₂ : list α
 variable  a : α
 
 check m + n * k
@@ -125,7 +125,7 @@ so on.
 Lean will insert coercions automatically:
 #+BEGIN_SRC lean
 variables m n k : ℕ
-variables u v w : ℤ 
+variables u v w : ℤ
 
 -- BEGIN
 check v + m
@@ -137,7 +137,7 @@ expression, you need to indicate the coercion manually if you write
 the arguments in the other order:
 #+BEGIN_SRC lean
 variables m n k : ℕ
-variables u v w : ℤ 
+variables u v w : ℤ
 
 -- BEGIN
 check ↑m + v
@@ -219,7 +219,7 @@ the =:==, and stores it in the environment.
 
 The type of functions from =α= to =β= is denoted =α → β=. We have
 already seen that a function =f= is applied to an element =x= in the
-domain type by writing =f x=. 
+domain type by writing =f x=.
 #+BEGIN_SRC lean
 variables α β : Type
 variables (a₁ a₂ : α) (b : β) (n : ℕ)
@@ -274,7 +274,7 @@ def baz k := m + k + 3
 check foo
 check bar
 check baz
-#+END_SRC 
+#+END_SRC
 
 Evaluating expressions involving abstraction and application has the expected behavior:
 #+BEGIN_SRC lean
@@ -336,7 +336,7 @@ illustrated below.
 def id₁ {α : Type} (x : α) : α := x
 def id₂ ⦃α : Type⦄ (x : α) : α := x
 
-check (id₁ : ℕ → ℕ) 
+check (id₁ : ℕ → ℕ)
 check (id₂ : Π α : Type, α → α)
 #+END_SRC
 
@@ -373,7 +373,7 @@ types.
 #+BEGIN_SRC lean
 open nat
 
-def exp (x : ℕ) : ℕ → ℕ 
+def exp (x : ℕ) : ℕ → ℕ
 | 0      := 1
 | (succ n) := exp n * (succ n)
 #+END_SRC
@@ -384,17 +384,17 @@ We will provide lots of examples of those in the next chapter.
 # TODO: add a reference to the next paragraph when the chapter exists.
 
 In the version of the Calculus of Inductive Constructions implemented
-by Lean, we start with a sequence of type universes, =Type 0=, =Type
-1=, =Type 2=, =Type 3=, ... The universe =Type 0= is called =Prop= and
-has special properties that we will describe later. For each =u= not
-equal to zero, an element =t : Type u= is itself a type. If you
+by Lean, we start with a sequence of type universes, =Sort 0=, =Sort
+1=, =Sort 2=, =Sort 3=, ... The universe =Sort 0= is called =Prop= and
+has special properties that we will describe later. =Type u= is a
+syntactic sugar for =Sort (u+1)=. For each =u=, an element =t : Type u= is itself a type. If you
 execute the following,
 #+BEGIN_SRC lean
 universe variable u
 check Type u
 #+END_SRC
 you will see that each =Type u= itself has type =Type (u+1)=. The notation
-=Type= is shorthand for =Type 1=.
+=Type= is shorthand for =Type 0=, which is a shorthand for =Sort 1=.
 
 In addition to the type universes, the Calculus of Inductive
 Constructions provides two means of forming new types:
@@ -406,7 +406,7 @@ We discussed pi types in the last section. Quotient types provide a
 means of defining a new type given a type and an equivalence relation
 on that type. They are used in the standard library to define, for
 example, the rational numbers, and a computational representation of
-finite sets (as lists, without duplicates, up to permutation). 
+finite sets (as lists, without duplicates, up to permutation).
 
 Inductive types are suprisingly useful. The natural numbers are
 defined inductively:
@@ -429,7 +429,7 @@ namespace hide
 universe variable u
 
 inductive list (α : Type u) : Type u
-| nil  : list 
+| nil  : list
 | cons : α → list → list
 -- END
 
@@ -513,7 +513,7 @@ interpretation. Lean also allows /mutual/ inductive types and /nested/
 inductive types. As an example, in the definition below, the type
 under definition appears as a parameter to the =list= type:
 #+BEGIN_SRC lean
-inductive tree (α : Type) : Type 
+inductive tree (α : Type) : Type
 | node : α → list tree → tree
 #+END_SRC
 Such definitions are /not/ among Lean's axoimatic primitives; rather,
@@ -618,7 +618,7 @@ languages like Haskell. For example, the Lean library declares the
 structures =has_one= and =has_mul= to support the generic notation =1=
 and =*= in structures which have a one and binary multiplication:
 #+BEGIN_SRC lean
-namespace hide 
+namespace hide
 
 -- BEGIN
 universe variable u
@@ -723,7 +723,7 @@ check square a * square b
 
 Lean allows us to to define nonconstructive functions using familiar
 classical principles, provided we mark the associated definitions as
-=noncomputable=. 
+=noncomputable=.
 #+BEGIN_SRC lean
 open classical
 local attribute [instance] prop_decidable
