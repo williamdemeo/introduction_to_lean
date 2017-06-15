@@ -112,16 +112,16 @@ CIC. In particular:
 We have already seen that Lean can evaluate expressions involving
 natural numbers, integers, lists, and booleans.
 #+BEGIN_SRC lean
-vm_eval 22 + 77 * 11
-vm_eval tt && (ff || tt)
-vm_eval [1, 2, 3] ++ 4 :: [5, 6, 7]
+#eval 22 + 77 * 11
+#eval tt && (ff || tt)
+#eval [1, 2, 3] ++ 4 :: [5, 6, 7]
 #+END_SRC
 
 Lean can evaluate conditional expressions:
 #+BEGIN_SRC lean
-vm_eval if 11 > 5 ∧ ff then 27 else 33 + 12
+#eval if 11 > 5 ∧ ff then 27 else 33 + 12
 
-vm_eval if 7 ∈ [1, 3, 5] then "hooray!" else "awww..."
+#eval if 7 ∈ [1, 3, 5] then "hooray!" else "awww..."
 #+END_SRC
 Here is a more interesting example:
 #+BEGIN_SRC lean
@@ -133,116 +133,86 @@ else if (come_out ∧ roll ∈ [2, 3, 12]) ∨ (¬ come_out ∧ roll = 7) then
 else 
   "Roll again."
 
-vm_eval craps 7 tt 4
-vm_eval craps 11 ff 2
+#eval craps 7 tt 4
+#eval craps 11 ff 2
 #+END_SRC
 
 The standard library defines a number of common operations on lists:
 #+BEGIN_SRC lean
-vm_eval list.range 100
+#eval list.range 100
 
-vm_eval list.map (λ x, x * x) (list.range 100)
+#eval list.map (λ x, x * x) (list.range 100)
 
-vm_eval list.filter (λ x, x > 50) (list.range 100)
+#eval list.filter (λ x, x > 50) (list.range 100)
 
-vm_eval list.foldl add 0 (list.range 100) 
+#eval list.foldl (+) 0 (list.range 100) 
 #+END_SRC
 
 A =char= is a natural number that is less than 255. You can enter the
-character "A," for example, by typing =#"A"=. We can define some basic
+character "A," for example, by typing ='A'=. Lean defines some basic
 operations on characters:
 #+BEGIN_SRC lean
-namespace char
+open char
 
-def to_lower (c : char) : char :=
-let n := to_nat c in
-if n >= 65 ∧ n <= 90 then of_nat (n + 32) else c
+#eval to_lower 'X'
+#eval to_lower 'x'
+#eval to_lower '!'
 
-def is_punctuation (c : char) : Prop :=
-c ∈ [#" ", #",", #".", #"?", #"!", #";", #"-", #"'"]
+#eval to_lower '!'
 
-instance : decidable_pred is_punctuation :=
-begin intro c, unfold is_punctuation, apply_instance end
-
-vm_eval to_lower #"X"
-vm_eval to_lower #"x"
-vm_eval to_lower #"!"
-
-vm_eval if is_punctuation #"?" then tt else ff
-
-end char
+#eval if is_punctuation '?' then tt else ff
 #+END_SRC
 In the example above, we have to tell Lean how to define a decision
 procedure for the predicate =is_punctuation=. We do this simply by
 unfolding the definition and asking Lean to use the inferred decision
 procedure for list membership.
 
-A string is defined to be a list of characters. Conceptually, the
-characters are stored the list in /reverse order/, which is to say,
-the pretty-printer prints them in that way. (This guarantees that
-appending a character to the end of a string is efficient.) As a
-result, operations on lists can be applied to strings.
+Strings can be mapped to lists of characters and back, so operations
+on lists and be used with strings.
 #+BEGIN_SRC lean
-namespace char
-
-def to_lower (c : char) : char :=
-let n := to_nat c in
-if n >= 65 ∧ n <= 90 then of_nat (n + 32) else c
-
-def is_punctuation (c : char) : Prop :=
-c ∈ [#" ", #",", #".", #"?", #"!", #";", #"-", #"'"]
-
-instance : decidable_pred is_punctuation :=
-begin intro c, unfold is_punctuation, apply_instance end
-
-end char
-
--- BEGIN
 namespace string
 
-def reverse (s : string) : string := list.reverse s
+def filter (p : char → Prop) [decidable_pred p] (s : string) : string :=
+((s.to_list).filter p).to_string
 
-def to_lower (s : string) : string := list.map char.to_lower s
+def map (f : char → char) (l : string) : string :=
+(l.to_list.map f).to_string
+
+def to_lower (s : string) : string := s.map char.to_lower
+
+def reverse (s : string) : string := s.to_list.reverse.to_string
 
 def remove_punctuation (s : string) : string :=
-list.filter (λ c, ¬ char.is_punctuation c) s
--- END
+s.filter (λ c, ¬ char.is_punctuation c)
+
 end string
 #+END_SRC
 We can use these to write a procedure that tests to see whether a
 given sentence is a palindrome.
 #+BEGIN_SRC lean
-namespace char
-
-def to_lower (c : char) : char :=
-let n := to_nat c in
-if n >= 65 ∧ n <= 90 then of_nat (n + 32) else c
-
-def is_punctuation (c : char) : Prop :=
-c ∈ [#" ", #",", #".", #"?", #"!", #";", #"-", #"'"]
-
-instance : decidable_pred is_punctuation :=
-begin intro c, unfold is_punctuation, apply_instance end
-
-end char
-
 namespace string
 
-def reverse (s : string) : string := list.reverse s
+def filter (p : char → Prop) [decidable_pred p] (s : string) : string :=
+((s.to_list).filter p).to_string
 
-def to_lower (s : string) : string := list.map char.to_lower s
+def map (f : char → char) (l : string) : string :=
+(l.to_list.map f).to_string
+
+def to_lower (s : string) : string := s.map char.to_lower
+
+def reverse (s : string) : string := s.to_list.reverse.to_string
 
 def remove_punctuation (s : string) : string :=
-list.filter (λ c, ¬ char.is_punctuation c) s
+s.filter (λ c, ¬ char.is_punctuation c)
 
 -- BEGIN
 def test_palindrome (s : string) : bool :=
 let s' := to_lower (remove_punctuation s) in
 if s' = reverse s' then tt else ff
 
-vm_eval test_palindrome "A man, a plan, a canal -- Panama!"
-vm_eval test_palindrome "Madam, I'm Adam!"
-vm_eval test_palindrome "This one is not even close."
+#eval test_palindrome "A man, a plan, a canal -- Panama!"
+#eval test_palindrome "Madam, I'm Adam!"
+#eval test_palindrome "This one is not even close."
 -- END
 
 end string
@@ -262,7 +232,7 @@ def fact : ℕ → ℕ
 | 0        := 1
 | (succ n) := (succ n) * fact n
 
-vm_eval fact 100
+#eval fact 100
 #+END_SRC
 Lean recognizes that addition on the natural numbers is defined in
 terms of the =succ= constructor, so you can also use more conventional
@@ -295,7 +265,7 @@ def fib : ℕ → ℕ
 | 1     := 1
 | (n+2) := fib (n+1) + fib n
 
-vm_eval fib 100
+#eval fib 100
 #+END_SRC
 The naive implementation runs the risk of an exponential run time,
 since the computation of =fib (n+2)= calls for two independent
@@ -312,7 +282,7 @@ def fib_aux : ℕ → ℕ × ℕ
 
 def fib n := (fib_aux n).2
 
-vm_eval fib 100
+#eval fib 100
 #+END_SRC
 A similar solution is to use additional arguments to accumulate
 partial results:
@@ -323,7 +293,7 @@ def fib_aux : ℕ → ℕ → ℕ → ℕ
 
 def fib n := fib_aux n 0 1
 
-vm_eval fib 100
+#eval fib 100
 #+END_SRC
  
 Functions on lists are naturally defined by structural
@@ -333,7 +303,7 @@ namespace hide
 open list
 
 -- BEGIN
-universe variable u
+universe u
 variable {α : Type u}
 
 def append : list α → list α → list α
@@ -399,7 +369,7 @@ stop a theory making use of the fact that the arbitrary element of
 nat, say, is chosen to be zero). The list library defines the =head=
 function as follows:
 #+BEGIN_SRC lean
-universe variable u
+universe u
 variable {α : Type u}
 
 def head [inhabited α] : list α → α
@@ -412,7 +382,7 @@ do this because in the CIC, an assertion can be treated as an argument
 to a function. The following function explicitly requires evidence
 that the argument =l= is not the empty list.
 #+BEGIN_SRC lean
-universe variable u
+universe u
 variable {α : Type u}
 
 -- BEGIN
@@ -428,7 +398,7 @@ evidence is ignored by the bytecode evaluator.
 A closely related solution is to use a =subtype=. This simply bundles
 together the data and the precondition. 
 #+BEGIN_SRC lean
-universe variable u
+universe u
 variable {α : Type u}
 
 def first : Π (l : list α), l ≠ [] → α
@@ -456,7 +426,7 @@ library as follows:
 #+BEGIN_SRC lean
 namespace hide
 
-universe variable u
+universe u
 
 -- BEGIN
 inductive option (α : Type u)
@@ -473,7 +443,7 @@ indicates that the argument =α= should be marked implicit, even though
 it cannot be inferred from other arguments.) For example, then =nth=
 element function is defined in the list library as follows:
 #+BEGIN_SRC lean
-universe variable u
+universe u
 variables {α : Type u} [inhabited α]
 
 open option nat
@@ -513,8 +483,8 @@ do v₁₀ ← nth l₁ 0,
    v₃₂ ← nth l₃ 2,
    return [v₁₀, v₂₀, v₂₁, v₃₀, v₃₁, v₃₂]
 
-vm_eval foo [1, 2, 3] [4, 5] [6, 7]
-vm_eval foo [1, 2, 3] [4, 5] [6, 7, 8]
+#eval foo [1, 2, 3] [4, 5] [6, 7]
+#eval foo [1, 2, 3] [4, 5] [6, 7, 8]
 #+END_SRC
 Here, if an calls to =nth= return =none=, =foo= returns =none= as
 well. But if all the calls are successful, the function constructs the
@@ -530,7 +500,7 @@ do n ← range 10,
    a ← ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"],
    repeat a n
 
-vm_eval foo
+#eval foo
 #+END_SRC
 Think of the body of =foo= is choosing a value =n=
 nondeterministically from =range 10=, and a value =a=
@@ -561,6 +531,8 @@ disks.
 
 #+BEGIN_SRC lean
 import system.io
+variable [io.interface]
+open io
 
 def hanoi_aux : ℕ → string → string → string → io unit
 | 0     fr to aux := put_str "nothing to do!\n"
@@ -573,77 +545,27 @@ def hanoi_aux : ℕ → string → string → string → io unit
 
 def hanoi (n : ℕ) := hanoi_aux n "A" "B" "C"
 
-vm_eval hanoi 5
+#eval hanoi 5
 #+END_SRC
 
 ** An Example: Abstract Syntax
 
 We close this chapter with an example that nicely illustrates the
-capacities for algebraic abstraction in Lean and the CIC.
-
-Lean's standard library defines a type of numerals, represented as
-binary numbers. To avoid binary strings with leading zeros, the
-definition is carried out in two stages, as follows:
-#+BEGIN_SRC lean
-namespace hide
-
--- BEGIN
-inductive pos_num : Type
-| one  : pos_num
-| bit1 : pos_num → pos_num
-| bit0 : pos_num → pos_num
-
-inductive num : Type
-| zero  : num
-| pos   : pos_num → num
--- END
-
-end hide
-#+END_SRC
-Lean's parser translates decimal numerals to expressions of type
-=num=, and its pretty printer translates the output in the other
-direction.
-
-We can interpret numerals in any type that has a 0, a 1, and
-addition. Lean has type classes =has_zero=, =has_one=, and =has_add=
-for these, but for our purposes, it suffices to use the class of
-semigroups, which extends all three.
-#+BEGIN_SRC lean
-universe variable u
-
-namespace semiring
-
-variables {α : Type u} [semiring α]
-
-def of_pos_num : pos_num → α
-| pos_num.one := 1
-| (pos_num.bit0 n) := (of_pos_num n) * 2
-| (pos_num.bit1 n) := (of_pos_num n) * 2 + 1
-
-def of_num : num → α
-| num.zero    := 0
-| (num.pos n) := of_pos_num n
-
-end semiring
-
-vm_eval (semiring.of_num 17 : ℕ)
-vm_eval (semiring.of_num 17 : ℤ)
-#+END_SRC
-
-Now let us define an abstract type of arithmetic expressions, each of
-which is either a variable, a numeral, a sum, or a product. 
+capacities for algebraic abstraction in Lean and the CIC. We first
+define an abstract type of arithmetic expressions, each of which is
+either a variable, a numeral, a sum, or a product.
 #+BEGIN_SRC lean
 inductive arith_expr
-| var : ℕ → arith_expr
-| const : num → arith_expr
-| plus : arith_expr → arith_expr → arith_expr
+| var   : ℕ → arith_expr
+| const : ℕ → arith_expr
+| plus  : arith_expr → arith_expr → arith_expr
 | times : arith_expr → arith_expr → arith_expr
 
 open arith_expr
 
 def sample_expr := plus (times (const 7) (var 0)) (times (const 2) (var 1))
 #+END_SRC
-Notice that the variales are indexed by the natural numbers.
+Notice that the variables are indexed by the natural numbers.
 
 We can evaluate an arithmetic expression in any semiring, given an
 assignment to the variables. We can define a variable assignment to be
@@ -652,7 +574,7 @@ type, but it is more convenient to specify an assignment by giving a
 finite list of values for the initial variables and using a default
 value elsewhere.
 #+BEGIN_SRC lean
-universe variable u
+universe u
 
 def var_assignment (α : Type u) := ℕ → α
 
@@ -667,38 +589,46 @@ variables (α : Type u) [inhabited α]
 instance : has_coe (list α) (var_assignment α) := ⟨var_assignment_of_list⟩
 end
 #+END_SRC
-The instance declaration at the end declares a
-=var_assignment_to_list= to be coercion.
+The instance declaration at the end declares a 
+=var_assignment_to_list= to be coercion. We need to know that =α= is
+inhabited to be able to return a default value for variables whose
+indices are largere than the length of the list.
 
-The evaluation function for arithmetic expressions can now be defined
-using a straightforward recursion on syntax:
+We can interpret a numeral in any semiring. The following definition
+uses well-founded recursion to carry out the cast; we use the =div=
+and =mod= functions to carry the translation efficiently. The two
+=have= statements give facts that are needed to justify the
+well-founded recursion.
 #+BEGIN_SRC lean
-universe variable u
+universe u
 
 namespace semiring
-
 variables {α : Type u} [semiring α]
 
-def of_pos_num : pos_num → α
-| pos_num.one := 1
-| (pos_num.bit0 n) := (of_pos_num n) * 2
-| (pos_num.bit1 n) := (of_pos_num n) * 2 + 1
-
-def of_num : num → α
-| num.zero    := 0
-| (num.pos n) := of_pos_num n
-
-instance : inhabited α := ⟨0⟩
+def of_nat : ℕ → α 
+| 0 := 0
+| 1 := 1
+| (n+2) := 
+  have n / 2 < n + 2, 
+    begin abstract { apply lt_of_le_of_lt, apply nat.div_le_self,
+                     apply nat.lt_add_of_pos_right, apply nat.succ_pos } end,
+  have n % 2 < n + 2, 
+    begin abstract { apply nat.lt_add_left, apply nat.mod_lt,
+                     apply nat.succ_pos } end,
+  2 * of_nat (n / 2) + of_nat (n % 2) 
 
 end semiring
+#+END_SRC
 
-vm_eval (semiring.of_num 17 : ℕ)
-vm_eval (semiring.of_num 17 : ℤ)
+We these in hand, the evaluation function for arithmetic expressions
+can now be defined using a straightforward recursion on syntax:
+#+BEGIN_SRC lean
+universe u
 
 inductive arith_expr
-| var : ℕ → arith_expr
-| const : num → arith_expr
-| plus : arith_expr → arith_expr → arith_expr
+| var   : ℕ → arith_expr
+| const : ℕ → arith_expr
+| plus  : arith_expr → arith_expr → arith_expr
 | times : arith_expr → arith_expr → arith_expr
 
 open arith_expr
@@ -716,16 +646,35 @@ def var_assignment_of_list {α : Type u} [inhabited α] (l : list α) : var_assi
 end
 
 section
+instance {α : Type u} [add_monoid α] : inhabited α := ⟨0⟩ 
+
 variables (α : Type u) [inhabited α]
 instance : has_coe (list α) (var_assignment α) := ⟨var_assignment_of_list⟩
 end
 
-variables (α : Type u) [semiring α]
+namespace semiring
+variables {α : Type u} [semiring α]
+
+def of_nat : ℕ → α 
+| 0 := 0
+| 1 := 1
+| (n+2) := 
+  have n / 2 < n + 2, 
+    begin abstract { apply lt_of_le_of_lt, apply nat.div_le_self,
+                     apply nat.lt_add_of_pos_right, apply nat.succ_pos } end,
+  have n % 2 < n + 2, 
+    begin abstract { apply nat.lt_add_left, apply nat.mod_lt,
+                     apply nat.succ_pos } end,
+  2 * of_nat (n / 2) + of_nat (n % 2) 
+
+end semiring
 
 -- BEGIN
+variables (α : Type u) [semiring α]
+
 def arith_eval (v : var_assignment α) : arith_expr → α
 | (var n)       := v n
-| (const n)     := semiring.of_num n
+| (const n)     := semiring.of_nat n
 | (plus e₁ e₂)  := arith_eval e₁ + arith_eval e₂
 | (times e₁ e₂) := arith_eval e₁ * arith_eval e₂
 -- END
@@ -735,31 +684,11 @@ end arith_expr
 
 We can now try it out:
 #+BEGIN_SRC lean
-universe variable u
-
-namespace semiring
-
-variables {α : Type u} [semiring α]
-
-def of_pos_num : pos_num → α
-| pos_num.one := 1
-| (pos_num.bit0 n) := (of_pos_num n) * 2
-| (pos_num.bit1 n) := (of_pos_num n) * 2 + 1
-
-def of_num : num → α
-| num.zero    := 0
-| (num.pos n) := of_pos_num n
-
-instance : inhabited α := ⟨0⟩
-
-end semiring
-
-vm_eval (semiring.of_num 17 : ℕ)
-vm_eval (semiring.of_num 17 : ℤ)
+universe u
 
 inductive arith_expr
 | var : ℕ → arith_expr
-| const : num → arith_expr
+| const : ℕ → arith_expr
 | plus : arith_expr → arith_expr → arith_expr
 | times : arith_expr → arith_expr → arith_expr
 
@@ -778,33 +707,48 @@ def var_assignment_of_list {α : Type u} [inhabited α] (l : list α) : var_assi
 end
 
 section
+instance {α : Type u} [add_monoid α] : inhabited α := ⟨0⟩ 
+
 variables (α : Type u) [inhabited α]
 instance : has_coe (list α) (var_assignment α) := ⟨var_assignment_of_list⟩
 end
+
+namespace semiring
+variables {α : Type u} [semiring α]
+
+def of_nat : ℕ → α 
+| 0 := 0
+| 1 := 1
+| (n+2) := 
+  have n / 2 < n + 2, 
+    begin abstract { apply lt_of_le_of_lt, apply nat.div_le_self,
+                     apply nat.lt_add_of_pos_right, apply nat.succ_pos } end,
+  have n % 2 < n + 2, 
+    begin abstract { apply nat.lt_add_left, apply nat.mod_lt,
+                     apply nat.succ_pos } end,
+  2 * of_nat (n / 2) + of_nat (n % 2) 
+
+end semiring
 
 variables (α : Type u) [semiring α]
 
 def arith_eval (v : var_assignment α) : arith_expr → α
 | (var n)       := v n
-| (const n)     := semiring.of_num n
+| (const n)     := semiring.of_nat n
 | (plus e₁ e₂)  := arith_eval e₁ + arith_eval e₂
 | (times e₁ e₂) := arith_eval e₁ * arith_eval e₂
 
 
 -- BEGIN
-vm_eval arith_eval ℕ ↑[5, 7]      sample_expr
-vm_eval arith_eval ℕ ↑[5, 7, 12]  sample_expr
-vm_eval arith_eval ℕ ↑[5]         sample_expr
-vm_eval arith_eval ℤ [(5 : ℤ), 7] sample_expr
+#eval arith_eval ℕ ↑[5, 7]        sample_expr
+#eval arith_eval ℕ ↑[5, 7, 12]    sample_expr
+#eval arith_eval ℕ ↑[5]           sample_expr
+
+#check arith_eval ℤ ↑[(5 : ℤ), 7] sample_expr
 -- END
 
 end arith_expr
 #+END_SRC
-In the first three examples, we help out the elaborator by indicating
+In these examples, we help out the elaborator by indicating
 that we intend to coerce the list to a
-=var_assignment=. Alternatively, we could have specified the type of
-any of the elements to be the natural numbers, which would have been
-enough to signal to the elaborator that a coercion is possible. In the
-last example, we provide just enough information to inform the
-elaborator that the given list is a list of integers.
-
+=var_assignment=.

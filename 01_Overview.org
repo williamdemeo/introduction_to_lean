@@ -12,7 +12,7 @@ you are reading this in our online tutorial system, you can run
 examples like the one below by clicking the button that says "try it
 yourself."
 #+BEGIN_SRC lean
-check "hello world!"
+#check "hello world!"
 #+END_SRC
 The response from Lean appears in the small window underneath the
 editor text, and also in popup windows that you can read when you
@@ -111,8 +111,8 @@ The points to a first intended use of Lean: it serves as a
 mathematical objects in precise terms. With these specifications, Lean
 can interpret basic objects and infer their types:
 #+BEGIN_SRC lean
-check (27 + 9) * 33
-check [(1, 2), (3, 4), (5, 6)] ++ [(7, 8), (9, 10)]
+#check (27 + 9) * 33
+#check [(1, 2), (3, 4), (5, 6)] ++ [(7, 8), (9, 10)]
 #+END_SRC
 When there is no other information present to constrain the type of a
 numeral, Lean assumes it denotes a natural, by default. Thus Lean can
@@ -125,8 +125,8 @@ print out the definition when requested to do so:
 def double (n : ℕ) : ℕ := n + n
 
 -- BEGIN
-check double
-print double
+#check double
+#print double
 -- END
 #+END_SRC
 Lean can reason about abstract objects as well as it can reason about
@@ -139,7 +139,7 @@ section
   variables (G : Type) [group G]
   variables g₁ g₂ : G
 
-  check g₂⁻¹ * g₁ * g₂
+  #check g₂⁻¹ * g₁ * g₂
 end
 #+END_SRC
 Putting the declarations in a =section=, as we do here, delimits their
@@ -156,7 +156,7 @@ assuming the definition does not depend on nonconstructive components
 in an essential way, every closed term of type =ℕ= evaluates to a
 numeral. Lean's kernel can carry out this evaluation:
 #+BEGIN_SRC lean
-eval (27 + 9) * 33
+#eval (27 + 9) * 33
 #+END_SRC
 As part of the kernel, the results of this evaluation can be highly
 trusted. The evaluator is not very efficient, however, and is not
@@ -169,10 +169,10 @@ ones used to interpret Ocaml and Python.
 def double (n : ℕ) : ℕ := n + n
 
 -- BEGIN
-vm_eval (27 + 9) * 33
-vm_eval (2227 + 9999) * 33
-vm_eval double 9999
-vm_eval [(1, 2), (3, 4), (5, 6)] ++ [(7, 8), (9, 10)]
+#eval (27 + 9) * 33
+#eval (2227 + 9999) * 33
+#eval double 9999
+#eval [(1, 2), (3, 4), (5, 6)] ++ [(7, 8), (9, 10)]
 -- END
 #+END_SRC
 Relying on results from the bytecode evaluator requires a higher level
@@ -193,7 +193,7 @@ specified binary relation =r= an on arbitrary type =α=, assuming only
 that we can determine computationally when =r= holds.
 #+BEGIN_SRC lean
 section sort
-universe variable u
+universe u
 parameters {α : Type u} (r : α → α → Prop) [decidable_rel r]
 local infix `≼` : 50 := r
 
@@ -213,7 +213,7 @@ type =α= in any such universe. We can run the procedure above on a
 list of natural numbers, using the usual ordering:
 #+BEGIN_SRC lean
 section sort
-universe variable u
+universe u
 parameters {α : Type u} (r : α → α → Prop) [decidable_rel r]
 local infix `≼` : 50 := r
 
@@ -228,7 +228,7 @@ def insertion_sort : list α → list α
 end sort
 
 -- BEGIN
-vm_eval insertion_sort (λ m n : ℕ, m ≤ n) [5, 27, 221, 95, 17, 43, 7, 2, 98, 567, 23, 12]
+#eval insertion_sort (λ m n : ℕ, m ≤ n) [5, 27, 221, 95, 17, 43, 7, 2, 98, 567, 23, 12]
 -- END
 #+END_SRC
 Substantial programs can be written in Lean and run by the bytecode
@@ -271,10 +271,10 @@ form compound statements:
 def even (n : ℕ) : Prop := ∃ m, n = 2 * m
 
 -- BEGIN
-check even 10
-check even 11
-check ∀ n, even n ∨ even (n + 1)
-check ∀ n m, even n → even m → even (n + m)
+#check even 10
+#check even 11
+#check ∀ n, even n ∨ even (n + 1)
+#check ∀ n m, even n → even m → even (n + m)
 -- END
 #+END_SRC
 In each case, the expression has type =Prop=, indicating the Lean

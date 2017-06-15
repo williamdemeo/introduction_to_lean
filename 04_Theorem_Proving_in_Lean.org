@@ -17,12 +17,12 @@ take propositions and return a proposition.
 #+BEGIN_SRC lean
 variables p q r : Prop
 
-check and  -- Prop → Prop → Prop
-check or   -- Prop → Prop → Prop
-check not  -- Prop → Prop
+#check and  -- Prop → Prop → Prop
+#check or   -- Prop → Prop → Prop
+#check not  -- Prop → Prop
 
-check p ∧ (p → r)
-check p ∧ ¬ (q ∨ ¬ r)
+#check p ∧ (p → r)
+#check p ∧ ¬ (q ∨ ¬ r)
 #+END_SRC
 There is no corresponding constant for implication: if =p= and =q= are
 propositions, the arrow in =p → q= is in fact an instance of the arrow
@@ -37,11 +37,11 @@ variables p q : ℕ → Prop
 variable  r : ℕ → ℕ → Prop
 variables m n : ℕ
 
-check p m ∧ q n
-check p m ∧ ¬ r m n → q n 
+#check p m ∧ q n
+#check p m ∧ ¬ r m n → q n 
 
-check ∀ x, p x → q x
-check ∀ x, ∃ y, r x y
+#check ∀ x, p x → q x
+#check ∀ x, ∃ y, r x y
 #+END_SRC 
 The universal quantifier is really an instance of the dependent
 function space construction; again, more on this in the next
@@ -51,23 +51,17 @@ variables p q : ℕ → Prop
 variable  n : ℕ
 
 -- BEGIN
-check ∀ x ≤ n, p x → q x 
+#check ∀ x ≤ n, p x → q x 
 
 variables (α : Type) (s t : list α) (a b : α) 
 
-check ∀ x ∈ s, x ∈ t
+#check ∀ x ∈ s, x ∈ t
 -- END
 #+END_SRC
 With these resources, we can start writing substantial mathematical
 assertions:
 #+BEGIN_SRC lean
 namespace nat
-
-def pow (n : ℕ) : ℕ → ℕ
-| 0       := 1
-| (m + 1) := n * pow m
-
-infix ` ^ ` := pow
 
 -- BEGIN
 def dvd (m n : ℕ) : Prop := ∃ k, n = m * k
@@ -136,7 +130,7 @@ We can use projections and anonymous constructors to express the proof
 even more concisely, though somewhat cryptically:
 #+BEGIN_SRC lean
 example (a b : Prop) : a ∧ b → b ∧ a :=
-λ h, ⟨h^.right, h^.left⟩
+λ h, ⟨h.right, h.left⟩
 #+END_SRC
 In the opposite direction, Lean provides syntactic sugar that allows
 us to annotation assumptions and goals, and build a proof
@@ -180,21 +174,24 @@ These commands can be used to invoke automation, like the simplifier:
 example (a b : Prop) : a ∧ b → b ∧ a :=
 begin intro, simp_using_hs end
 #+END_SRC
-We can also invoke a superposition theorem prover:
-#+BEGIN_SRC lean
-import tools.super
 
-example (a b : Prop) : a ∧ b → b ∧ a :=
-by super
-#+END_SRC
+# TODO(Jeremy): add something like this back when we have a propositional
+# prover in the core library.
+# We can also invoke a superposition theorem prover:
+# #+BEGIN_SRC lean
+# import tools.super
+
+# example (a b : Prop) : a ∧ b → b ∧ a :=
+# by super
+# #+END_SRC
 
 Anywhere Lean's parser expects an expression, you can enter tactic
 mode with a =begin ... end= block, or with the =by= keyword. 
 #+BEGIN_SRC lean
 example (a b : Prop) : a ∧ b → b ∧ a :=
 assume h : a ∧ b, 
-have ha : a, from h^.left,
-have hb : b, from h^.right,
+have ha : a, from h.left,
+have hb : b, from h.right,
 show b ∧ a, 
   begin split, repeat { assumption } end
 #+END_SRC
@@ -204,7 +201,7 @@ specifying an explicit term:
 example (a b : Prop) : a ∧ b → b ∧ a :=
 begin 
   intro h, cases h with ha hb,
-  show b ∧ a, from and.intro hb ha
+  exact and.intro hb ha
 end
 #+END_SRC
 We can even pass back and forth between the two modes freely:
@@ -212,7 +209,7 @@ We can even pass back and forth between the two modes freely:
 example (a b : Prop) : a ∧ b → b ∧ a :=
 begin 
   intro h, cases h with ha hb,
-  show b ∧ a, from and.intro (by assumption) (by assumption)
+  exact and.intro (by assumption) (by assumption)
 end
 #+END_SRC
 This lets us write proofs in a manner that lays out the structure
@@ -229,8 +226,8 @@ statement of the proposition with French quotes, obtained by typing
 #+BEGIN_SRC lean
 example (a b : Prop) : a ∧ b → b ∧ a :=
 suppose a ∧ b,
-have a, from this^.left,
-have b, from ‹a ∧ b›^.right,
+have a, from this.left,
+have b, from ‹a ∧ b›.right,
 show b ∧ a, from and.intro ‹b› ‹a› 
 #+END_SRC
 These anonymous elements of the context are also visible to tactics
@@ -238,14 +235,14 @@ and automation:
 #+BEGIN_SRC lean
 example (a b : Prop) : a ∧ b → b ∧ a :=
 suppose a ∧ b,
-have a, from this^.left,
-have b, from ‹a ∧ b›^.right,
+have a, from this.left,
+have b, from ‹a ∧ b›.right,
 show b ∧ a, begin split, repeat { assumption } end
 
 example (a b : Prop) : a ∧ b → b ∧ a :=
 suppose a ∧ b,
-have a, from this^.left,
-have b, from ‹a ∧ b›^.right,
+have a, from this.left,
+have b, from ‹a ∧ b›.right,
 show b ∧ a, by simp_using_hs
 #+END_SRC
 
@@ -256,7 +253,10 @@ provides a number of ways of carrying out proofs by induction.
 Suppose, for example, we define exponentiation generically in any
 monoid.
 #+BEGIN_SRC lean
-universe variable u
+namespace hide
+
+-- BEGIN
+universe u
 variable {α : Type u}
 variable [monoid α]
 
@@ -271,6 +271,9 @@ infix `^` := pow
 theorem pow_zero (a : α) : a^0 = 1 := rfl
 
 theorem pow_succ (a : α) (n : ℕ) : a^(succ n) = a * a^n := rfl
+-- END
+
+end hide
 #+END_SRC
 We use the rewrite tactic =rw= to rewrite an expression with a
 sequence of identities.
@@ -279,7 +282,8 @@ The theorem =pow_succ= states that =a^(succ n) = a * a^n=. The monoid
 in question is not assumed to be commutative, so it requires a proof
 by induction to show that =a^(succ n) = a^n * a=.
 #+BEGIN_SRC lean
-universe variable u
+namespace hide
+universe u
 variable {α : Type u}
 variable [monoid α]
 
@@ -297,7 +301,7 @@ theorem pow_succ (a : α) (n : ℕ) : a^(succ n) = a * a^n := rfl
 
 -- BEGIN
 theorem pow_succ' (a : α) (n : ℕ) : a^(succ n) = a^n * a :=
-nat.induction_on n
+nat.rec_on n
   (show a^(succ 0) = a^0 * a, 
     by simp [pow_zero, one_mul, pow_succ])
   (take n,
@@ -305,15 +309,18 @@ nat.induction_on n
     show a^(succ (succ n)) = a^(succ n) * a,
       by rw [pow_succ, ih, -mul_assoc, -pow_succ, ih])
 -- END
+
+end hide
 #+END_SRC
-The rule =nat.induction_on= is derived directly from the primitive
-governing recursion on the natural numbers, and works as you would
+By propositions as types, the same principle =nat.rec_on= governs both
+induction and recursion on the natural numbers, and works as you would
 expect: you prove the base case, and then carry out the induction
 step. Lean has a special proof mode, =calc=, that facilitates writing
-calculational proofs. It can be used in this case to make the
-argument more readable:
+calculational proofs. It can be used in this case to make the argument
+more readable:
 #+BEGIN_SRC lean
-universe variable u
+namespace hide
+universe u
 variable {α : Type u}
 variable [monoid α]
 
@@ -331,7 +338,7 @@ theorem pow_succ (a : α) (n : ℕ) : a^(succ n) = a * a^n := rfl
 
 -- BEGIN
 theorem pow_succ' (a : α) (n : ℕ) : a^(succ n) = a^n * a :=
-nat.induction_on n
+nat.rec_on n
   (show a^(succ 0) = a^0 * a, 
     by simp [pow_zero, one_mul, pow_succ])
   (take n,
@@ -343,6 +350,8 @@ nat.induction_on n
                       ... = (a * a^n) * a  : by rw mul_assoc
                       ... = a^(succ n) * a : by rw -pow_succ)
 -- END
+
+end hide
 #+END_SRC
 The =calc= mode can be used with inequalities and transitive relations
 that have been registered with the system.
@@ -351,7 +360,8 @@ By the propositions-as-types correspondence, induction is just a form
 of recursion, and so the function definition system can be used to
 write proofs by induction as well.
 #+BEGIN_SRC lean
-universe variable u
+namespace hide
+universe u
 variable {α : Type u}
 variable [monoid α]
 
@@ -373,6 +383,8 @@ theorem pow_succ' (a : α) : ∀ n, a^(succ n) = a^n * a
 | (succ n) := by rw [pow_succ, pow_succ' n, -mul_assoc,
                        -pow_succ, pow_succ' n]
 -- END
+
+end hide
 #+END_SRC
 Here the rewrite tactic uses the inductive hypothesis =pow_succ'
 n=. In an inductive proof like this, structurally decreasing calls can
@@ -384,7 +396,8 @@ induction variable and then generalize them again. The =with= clause
 names the variable used in the inductive step, as well as the
 inductive hypothesis. 
 #+BEGIN_SRC lean
-universe variable u
+namespace hide
+universe u
 variable {α : Type u}
 variable [monoid α]
 
@@ -408,10 +421,13 @@ begin
   rw [pow_succ, ih, -mul_assoc, -pow_succ, ih]
 end
 -- END
+
+end hide
 #+END_SRC 
 Here is another example of proof that uses the induction tactic.
 #+BEGIN_SRC lean
-universe variable u
+namespace hide
+universe u
 variable {α : Type u}
 variable [monoid α]
 
@@ -442,6 +458,8 @@ begin
   rw [add_succ, pow_succ', ih, pow_succ', mul_assoc]
 end
 -- END
+
+end hide
 #+END_SRC
 
 Recall the recursive definitions of the =append= and =length=
@@ -450,7 +468,7 @@ functions for lists from [[file:03_Programming_in_Lean.org::#Recursive_Definitio
 namespace hide
 open list
 
-universe variable u
+universe u
 variable {α : Type u}
 
 -- BEGIN
@@ -468,7 +486,7 @@ end hide
 The natural way to prove things about these is to use induction on
 lists. Here are some examples.
 #+BEGIN_SRC lean
-universe variable u
+universe u
 variable {α : Type u}
 
 open nat list
@@ -483,7 +501,7 @@ begin induction s with a s ih, reflexivity, simp [cons_append, ih] end
 theorem length_append (s t : list α) : length (s ++ t) = length s + length t :=
 begin 
   induction s with a s ih, 
-  simp [nil_append, length_nil], 
+  simp [nil_append, length], 
   simp [length_cons, cons_append, ih] 
 end
 
