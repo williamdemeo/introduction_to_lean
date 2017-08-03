@@ -232,7 +232,10 @@ end sort
 -- END
 #+END_SRC
 Substantial programs can be written in Lean and run by the bytecode
-interpreter. You can profile your code by setting the relevant options:
+interpreter. In fact, a full-blown [[https://github.com/leanprover/super][resolution theorem prover]] for Lean
+has been written in Lean itself.
+
+You can profile your code by setting the relevant options:
 #+BEGIN_SRC lean
 set_option profiler true
 set_option profiler.freq 10
@@ -242,23 +245,13 @@ polled with. Be careful: if the task you profile is too short, there won't
 be any output! You can even implement your own [[https://github.com/leanprover/lean/tree/master/library/tools/debugger][debugger]] in Lean
 itself.
 
-In fact, a full-blown resolution theorem prover has been written in
-Lean, and can be found in the [[https://github.com/leanprover/lean/tree/master/library/tools/super][tools]] folder of the library. (We will
-say more about this below.) A procedure which translates code written
-in Lean into C++ is also under development. Executing code written
-in this way requires trusting that the translation is faithful to the
-semantics of the source expressions in Lean, as well as trusting the
-C++ compiler (and, of course, the hardware and environment in which the
-code is run). The advantage is that at least the source of the
-translation has been specified in a fully precise way, making it
-possible to reason about its intended behavior.
-
-Which brings us to a third, and central, intended use of Lean: namely
-we can make assertions about the objects we define and then go on to
-prove those assertions. We can do this because the language of
-dependent type theory is rich enough to encode such assertions and
-proofs. For example, we can express the property that a natural number
-is even:
+What makes Lean special as a programming language is that the programs
+we write define functions in a precise axiomatic framework. Which
+brings us to third, and central, intended use of Lean: namely we can
+make assertions about the objects we define and then go on to prove
+those assertions. We can do this because the language of dependent
+type theory is rich enough to encode such assertions and proofs. For
+example, we can express the property that a natural number is even:
 #+BEGIN_SRC lean
 def even (n : ℕ) : Prop := ∃ m, n = 2 * m
 #+END_SRC
