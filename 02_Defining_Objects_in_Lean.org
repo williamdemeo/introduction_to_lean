@@ -753,11 +753,11 @@ it doesn't. The second definition makes a best effort to define an
 inverse to a function =f= from the natural numbers to the natural
 numbers, mapping each =n= to some =m= such that =f m = n=, and zero
 otherwise.
-These two definitions make use of the =some= function, which in turn
-depends on a construct known as /Hilbert's epsilon/. 
 
-The next two definitions have essentially the same effect, although they 
-do not specify the default value in case the given condition fails:
+The two prevoius definitions make use of the =some= function, which in
+turn depends on a construct known as /Hilbert's epsilon/. The next two
+definitions have essentially the same effect, although they do not
+specify the default value in case the given condition fails:
 #+BEGIN_SRC lean
 open classical
 local attribute [instance] prop_decidable
