@@ -147,9 +147,9 @@ scope. In this case, the section declaration is not needed, and no
 harm would be done if we had declared these variables at the top
 level.
 
-An important feature of dependent type theory is that expressions have
-a computational interpretation, which is to say, there are rules that
-specify how they can be /reduced/ to a normal form. Moreover,
+An important feature of dependent type theory is that every expression
+has a computational interpretation, which is to say, there are rules
+that specify how they can be /reduced/ to a normal form. Moreover,
 expressions in a computationally pure fragment of the language
 evaluate to /values/ in the way you would expect. For example,
 assuming the definition does not depend on nonconstructive components
