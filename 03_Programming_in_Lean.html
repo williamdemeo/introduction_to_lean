@@ -1,0 +1,1109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2017-07-24 Mon 23:40 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>An Introduction to Lean</title>
+<meta name="generator" content="Org mode" />
+<meta name="author" content="[[http://www.andrew.cmu.edu/user/avigad][Jeremy Avigad]]Jeremy Avigad, [[http://leodemoura.github.io][Leonardo de Moura]]Leonardo de Moura, [[https://gebner.org/][Gabriel Ebner]]Gabriel Ebner, and Sebastian Ullrich" />
+<link rel="stylesheet" href="css/tutorial.css"/>
+<link rel="stylesheet" href="css/code.css"/>
+<script type="text/javascript" charset="utf-8">if(!window.PolymerGestures) { var head = document.getElementsByTagName('head')[0]; var js = document.createElement("script"); js.type = "text/javascript"; js.src = "//cdn.jsdelivr.net/webcomponentsjs/0.7.20/webcomponents.min.js"; head.appendChild(js); } </script>
+<link rel='import' href='juicy-ace-editor.html'/>
+</head>
+<body>
+<div id="content">
+<h1 class="title">An Introduction to Lean</h1>
+
+<div id="outline-container-orgbdd2724" class="outline-2">
+<h2 id="Programming_in_Lean"><a id="orgbdd2724"></a><span class="section-number-2"> 3</span> Programming in Lean</h2>
+<div class="outline-text-2" id="text-Programming_in_Lean">
+<p>
+Lean aims to support both mathematical abstraction alongside pragmatic
+computation, allowing both to interact in a common foundational
+framework. Some users will be interested in viewing Lean as a
+programming language, and making sure that every assertion has direct
+computational meaning. Others will be interested in treating Lean as a
+system for reasoning about abstract mathematical objects and
+assertions, which may not have straightforward computational
+interpretations.  Lean is designed to be a comfortable environment for
+both kinds of users.
+</p>
+
+<p>
+But Lean is also designed to support users who want to maintain both
+world views at once. This includes mathematical users who, having
+developed an abstract mathematical theory, would then like to start
+computing with the mathematical objects in a verified way. It also
+includes computer scientists and engineers who, having written a
+program or modeled a piece of hardware or software in Lean, would like
+to verify claims about it against a background mathematical theory of
+arithmetic, analysis, dynamical systems, or stochastic processes.
+</p>
+
+<p>
+Lean employs a number of carefully chosen devices to support a clean
+and principled unification of the two worlds. Chief among these is the
+inclusion of a type <code>Prop</code> of propositions, or assertions. If <code>p</code> is
+an element of type <code>Prop</code>, you can think of an element <code>t : p</code> as
+representing evidence that <code>p</code> is true, or a proof of <code>p</code>, or simply
+the fact that <code>p</code> holds. The element <code>t</code>, however, does not bear any
+computational information. In contrast, if <code>α</code> is an element of <code>Type
+u</code> for any <code>u</code> greater than 0 and <code>t : α</code>, then <code>t</code> contains data, and
+can be evaluated.
+</p>
+
+<p>
+We saw in <a href="#" onclick="myModule.loadTutorial('02_Defining_Objects_in_Lean.html', 'Nonconstructive_Definitions')">Section 2.5</a> that Lean allows us to define functions that
+produce data from a proposition <code>∃ x, p x</code>, but that such functions
+are marked as <code>noncomputable</code>, and do not generate
+bytecode. Expressions <code>t : α</code>, where <code>α</code> is a type of data, can
+contain subexpressions that are elements of <code>Prop</code>, and these can even
+refer to nonconstructive objects. During the extraction of bytecode,
+these elements are simply ignored, and do not contribute to the
+computational content of <code>t</code>.
+</p>
+
+<p>
+For that reason, abstract elements in Lean's library can have
+<i>computational refinements</i>. For example, for every type, <code>α</code>, there
+is another type, <code>set α</code>, of sets of elements of <code>α</code> and some sets
+satisfy the property of being <code>finite</code>. Saying that a set is finite is
+equivalent to saying that there exists a list that contains exactly
+the same elements. But this statement is a proposition, which means
+that it is impossible to extract such a list from the mere assertion
+that it exists. For that reason, the standard library also defines a
+type <code>finset α</code>, which is better suited to computation. An element
+<code>s : finset α</code> is represented by a list of elements of <code>α</code> without
+duplicates. Using quotient types, we can arrange that lists that
+differ up to permutation are considered equal, and a defining
+principle of quotient types allows us to define a function on <code>finset
+α</code> in terms of any list that represents it, provided that we show that
+our definition is invariant under permutations of the
+list. Computationally, an element of <code>finset α</code> <i>is</i> just a
+list. Everything else is essentially a contract that we commit
+ourselves to obeying when working with elements of <code>finset α</code>. The
+contract is important to reasoning about the results of our
+computations and their properties, but it plays no role in the
+computation itself.
+</p>
+
+<p>
+As another example of the interaction between propositions and data,
+consider the fact that we do not always have algorithms that determine
+whether a proposition is true (consider, for example, the proposition
+that a Turing machine halts). In many cases, however, we do. For
+example, assertions <code>m = n</code> and <code>m &lt; n</code> about natural numbers, and
+Boolean combinations of these, can be evaluated. Propositions like
+this are said to be <i>decidable</i>. Lean's library uses class inference
+to infer the decidability, and when it succeeds, you can use a
+decidable property in an <code>if</code> &#x2026; <code>then</code> &#x2026; <code>else</code> conditional
+statement. Computationally, what is going on is that class inference
+finds the relevant procedure, and the bytecode evaluator uses it.
+</p>
+
+<p>
+One side effect of the choice of CIC as a foundation is that all
+functions we define, computational or not, are total. Once again,
+dependent type theory offers various mechanisms that we can use to
+restrict the range of applicability of a function, and some will be
+described below.
+</p>
+</div>
+
+<div id="outline-container-orgac51330" class="outline-3">
+<h3 id="orgac51330"><span class="section-number-3"> 3.1</span> Evaluating Expressions</h3>
+<div class="outline-text-3" id="text-1-1">
+<p>
+When translating expressions to byte code, Lean's virtual machine
+evaluator ignores type information entirely. The whole elaborate
+typing schema of the CIC serves to ensure that terms make sense, and
+mean what we think they mean. Type checking is entirely static: when
+evaluating a term <code>t</code> of type <code>α</code>, the bytecode evaluator ignores <code>α</code>,
+and simply computes the value of <code>t</code>, as described below. As noted
+above, any subexpressions of <code>t</code> whose type is an element of <code>Prop</code>
+are computationally irrelevant, and they are ignored too.
+</p>
+
+<p>
+The evaluation of expressions follows the computational rules of the
+CIC. In particular:
+</p>
+<ul class="org-ul">
+<li>To evaluate a function application <code>(λ x, s) t</code>, the bytecode
+evaluator evaluates <code>t</code>, and then evaluates <code>s</code> with <code>x</code>
+instantiated to <code>t</code>.</li>
+<li>To evaluate an eliminator for an inductively defined type &#x2014; in
+other words, a function defined by pattern matching or recursion &#x2014;
+the bytecode evaluator waits until all the arguments are given,
+evaluates the first one, and, on the basis of the result, applies
+the relevant case or recursive call.</li>
+</ul>
+
+<p>
+We have already seen that Lean can evaluate expressions involving
+natural numbers, integers, lists, and booleans.
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-1' mode="ace/mode/lean" readonly="true">#eval 22 + 77 * 11
+#eval tt &amp;&amp; (ff || tt)
+#eval [1, 2, 3] ++ 4 :: [5, 6, 7]
+</juicy-ace-editor><div id='lean-full-code-1' style='display:none'>#eval 22 + 77 * 11
+#eval tt &amp;&amp; (ff || tt)
+#eval [1, 2, 3] ++ 4 :: [5, 6, 7]
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-1').text());">Try it yourself &raquo;</button></div>
+</div>
+
+<p>
+Lean can evaluate conditional expressions:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-2' mode="ace/mode/lean" readonly="true">#eval if 11 &gt; 5 ∧ ff then 27 else 33 + 12
+
+#eval if 7 ∈ [1, 3, 5] then "hooray!" else "awww..."
+</juicy-ace-editor><div id='lean-full-code-2' style='display:none'>#eval if 11 &gt; 5 ∧ ff then 27 else 33 + 12
+
+#eval if 7 ∈ [1, 3, 5] then "hooray!" else "awww..."
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-2').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+Here is a more interesting example:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-3' mode="ace/mode/lean" readonly="true">def craps (roll : ℕ) (come_out : bool) (point : ℕ) : string :=
+if (come_out ∧ (roll = 7 ∨ roll = 11)) ∨ (¬ come_out ∧ roll = point) then
+  "You win!"
+else if (come_out ∧ roll ∈ [2, 3, 12]) ∨ (¬ come_out ∧ roll = 7) then
+  "You lose!"
+else 
+  "Roll again."
+
+#eval craps 7 tt 4
+#eval craps 11 ff 2
+</juicy-ace-editor><div id='lean-full-code-3' style='display:none'>def craps (roll : ℕ) (come_out : bool) (point : ℕ) : string :=
+if (come_out ∧ (roll = 7 ∨ roll = 11)) ∨ (¬ come_out ∧ roll = point) then
+  "You win!"
+else if (come_out ∧ roll ∈ [2, 3, 12]) ∨ (¬ come_out ∧ roll = 7) then
+  "You lose!"
+else 
+  "Roll again."
+
+#eval craps 7 tt 4
+#eval craps 11 ff 2
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-3').text());">Try it yourself &raquo;</button></div>
+</div>
+
+<p>
+The standard library defines a number of common operations on lists:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-4' mode="ace/mode/lean" readonly="true">#eval list.range 100
+
+#eval list.map (λ x, x * x) (list.range 100)
+
+#eval list.filter (λ x, x &gt; 50) (list.range 100)
+
+#eval list.foldl (+) 0 (list.range 100)
+</juicy-ace-editor><div id='lean-full-code-4' style='display:none'>#eval list.range 100
+
+#eval list.map (λ x, x * x) (list.range 100)
+
+#eval list.filter (λ x, x &gt; 50) (list.range 100)
+
+#eval list.foldl (+) 0 (list.range 100)
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-4').text());">Try it yourself &raquo;</button></div>
+</div>
+
+<p>
+A <code>char</code> is a natural number that is less than 255. You can enter the
+character "A," for example, by typing <code>'A'</code>. Lean defines some basic
+operations on characters:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-5' mode="ace/mode/lean" readonly="true">open char
+
+#eval to_lower 'X'
+#eval to_lower 'x'
+#eval to_lower '!'
+
+#eval to_lower '!'
+
+#eval if is_punctuation '?' then tt else ff
+</juicy-ace-editor><div id='lean-full-code-5' style='display:none'>open char
+
+#eval to_lower 'X'
+#eval to_lower 'x'
+#eval to_lower '!'
+
+#eval to_lower '!'
+
+#eval if is_punctuation '?' then tt else ff
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-5').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+In the example above, we have to tell Lean how to define a decision
+procedure for the predicate <code>is_punctuation</code>. We do this simply by
+unfolding the definition and asking Lean to use the inferred decision
+procedure for list membership.
+</p>
+
+<p>
+Strings can be mapped to lists of characters and back, so operations
+on lists and be used with strings.
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-6' mode="ace/mode/lean" readonly="true">namespace string
+
+def filter (p : char → Prop) [decidable_pred p] (s : string) : string :=
+((s.to_list).filter p).to_string
+
+def map (f : char → char) (l : string) : string :=
+(l.to_list.map f).to_string
+
+def to_lower (s : string) : string := s.map char.to_lower
+
+def reverse (s : string) : string := s.to_list.reverse.to_string
+
+def remove_punctuation (s : string) : string :=
+s.filter (λ c, ¬ char.is_punctuation c)
+
+end string
+</juicy-ace-editor><div id='lean-full-code-6' style='display:none'>namespace string
+
+def filter (p : char → Prop) [decidable_pred p] (s : string) : string :=
+((s.to_list).filter p).to_string
+
+def map (f : char → char) (l : string) : string :=
+(l.to_list.map f).to_string
+
+def to_lower (s : string) : string := s.map char.to_lower
+
+def reverse (s : string) : string := s.to_list.reverse.to_string
+
+def remove_punctuation (s : string) : string :=
+s.filter (λ c, ¬ char.is_punctuation c)
+
+end string
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-6').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+We can use these to write a procedure that tests to see whether a
+given sentence is a palindrome.
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-7' mode="ace/mode/lean" readonly="true">def test_palindrome (s : string) : bool :=
+let s' := to_lower (remove_punctuation s) in
+if s' = reverse s' then tt else ff
+
+#eval test_palindrome "A man, a plan, a canal -- Panama!"
+#eval test_palindrome "Madam, I'm Adam!"
+#eval test_palindrome "This one is not even close."</juicy-ace-editor><div id='lean-full-code-7' style='display:none'>namespace string
+
+def filter (p : char → Prop) [decidable_pred p] (s : string) : string :=
+((s.to_list).filter p).to_string
+
+def map (f : char → char) (l : string) : string :=
+(l.to_list.map f).to_string
+
+def to_lower (s : string) : string := s.map char.to_lower
+
+def reverse (s : string) : string := s.to_list.reverse.to_string
+
+def remove_punctuation (s : string) : string :=
+s.filter (λ c, ¬ char.is_punctuation c)
+
+def test_palindrome (s : string) : bool :=
+let s' := to_lower (remove_punctuation s) in
+if s' = reverse s' then tt else ff
+
+#eval test_palindrome "A man, a plan, a canal -- Panama!"
+#eval test_palindrome "Madam, I'm Adam!"
+#eval test_palindrome "This one is not even close."
+
+end string
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-7').text());">Try it yourself &raquo;</button></div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org4d27adf" class="outline-3">
+<h3 id="Recursive_Definitions"><a id="org4d27adf"></a><span class="section-number-3"> 3.2</span> Recursive Definitions</h3>
+<div class="outline-text-3" id="text-Recursive_Definitions">
+<p>
+Lean supports definition of functions by structural recursion on its
+arguments. 
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-8' mode="ace/mode/lean" readonly="true">open nat
+
+def fact : ℕ → ℕ
+| 0        := 1
+| (succ n) := (succ n) * fact n
+
+#eval fact 100
+</juicy-ace-editor><div id='lean-full-code-8' style='display:none'>open nat
+
+def fact : ℕ → ℕ
+| 0        := 1
+| (succ n) := (succ n) * fact n
+
+#eval fact 100
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-8').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+Lean recognizes that addition on the natural numbers is defined in
+terms of the <code>succ</code> constructor, so you can also use more conventional
+mathematical notation.
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-9' mode="ace/mode/lean" readonly="true">def fact : ℕ → ℕ
+| 0     := 1
+| (n+1) := (n+1) * fact n
+</juicy-ace-editor><div id='lean-full-code-9' style='display:none'>def fact : ℕ → ℕ
+| 0     := 1
+| (n+1) := (n+1) * fact n
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-9').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+Lean will compile definitions like these down to the primitives of the
+Calculus of Inductive Constructions, though in the case of <code>fact</code> it
+is straightforward to define it from the primitive recursion principle
+directly.
+</p>
+
+<p>
+Lean's function definition system can handle more elaborate forms of
+pattern matching with defaults. For example, the following function
+returns true if and only if one of its arguments is positive.
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-10' mode="ace/mode/lean" readonly="true">def foo : ℕ → ℕ → ℕ → bool
+| (n+1) _      _     := tt
+| _     (m+1)  _     := tt
+| _      _     (k+1) := tt
+| _      _        _  := ff
+</juicy-ace-editor><div id='lean-full-code-10' style='display:none'>def foo : ℕ → ℕ → ℕ → bool
+| (n+1) _      _     := tt
+| _     (m+1)  _     := tt
+| _      _     (k+1) := tt
+| _      _        _  := ff
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-10').text());">Try it yourself &raquo;</button></div>
+</div>
+
+<p>
+We can define the sequence of Fibonacci numbers in a natural way:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-11' mode="ace/mode/lean" readonly="true">def fib : ℕ → ℕ
+| 0     := 1
+| 1     := 1
+| (n+2) := fib (n+1) + fib n
+
+#eval fib 100
+</juicy-ace-editor><div id='lean-full-code-11' style='display:none'>def fib : ℕ → ℕ
+| 0     := 1
+| 1     := 1
+| (n+2) := fib (n+1) + fib n
+
+#eval fib 100
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-11').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+The naive implementation runs the risk of an exponential run time,
+since the computation of <code>fib (n+2)</code> calls for two independent
+computations of <code>fib n</code>, one hidden in the computation of <code>fib
+(n+1)</code>. In fact, the current Lean compilation scheme avoids this,
+because it joins the recursive falls in a single tuple and evaluates
+them both at once. We can do this explictly, thereby avoiding reliance
+on the inner workings of Lean's function definition system, by
+defining an auxiliary function that computes the values in pairs:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-12' mode="ace/mode/lean" readonly="true">def fib_aux : ℕ → ℕ × ℕ
+| 0     := (0, 1)
+| (n+1) := let p := fib_aux n in (p.2, p.1 + p.2)
+
+def fib n := (fib_aux n).2
+
+#eval fib 100
+</juicy-ace-editor><div id='lean-full-code-12' style='display:none'>def fib_aux : ℕ → ℕ × ℕ
+| 0     := (0, 1)
+| (n+1) := let p := fib_aux n in (p.2, p.1 + p.2)
+
+def fib n := (fib_aux n).2
+
+#eval fib 100
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-12').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+A similar solution is to use additional arguments to accumulate
+partial results:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-13' mode="ace/mode/lean" readonly="true">def fib_aux : ℕ → ℕ → ℕ → ℕ
+| 0     a b := b
+| (n+1) a b := fib_aux n b (a+b)
+
+def fib n := fib_aux n 0 1
+
+#eval fib 100
+</juicy-ace-editor><div id='lean-full-code-13' style='display:none'>def fib_aux : ℕ → ℕ → ℕ → ℕ
+| 0     a b := b
+| (n+1) a b := fib_aux n b (a+b)
+
+def fib n := fib_aux n 0 1
+
+#eval fib 100
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-13').text());">Try it yourself &raquo;</button></div>
+</div>
+
+<p>
+Functions on lists are naturally defined by structural
+recursion. These definitions are taken from the standard library:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-14' mode="ace/mode/lean" readonly="true">universe u
+variable {α : Type u}
+
+def append : list α → list α → list α
+| []       l := l
+| (h :: s) t := h :: (append s t)
+
+def mem : α → list α → Prop
+| a []       := false
+| a (b :: l) := a = b ∨ mem a l
+
+def concat : list α → α → list α
+| []     a := [a]
+| (b::l) a := b :: concat l a
+
+def length : list α → nat
+| []       := 0
+| (a :: l) := length l + 1
+
+def empty : list α → bool
+| []       := tt
+| (_ :: _) := ff
+</juicy-ace-editor><div id='lean-full-code-14' style='display:none'>namespace hide
+open list
+
+universe u
+variable {α : Type u}
+
+def append : list α → list α → list α
+| []       l := l
+| (h :: s) t := h :: (append s t)
+
+def mem : α → list α → Prop
+| a []       := false
+| a (b :: l) := a = b ∨ mem a l
+
+def concat : list α → α → list α
+| []     a := [a]
+| (b::l) a := b :: concat l a
+
+def length : list α → nat
+| []       := 0
+| (a :: l) := length l + 1
+
+def empty : list α → bool
+| []       := tt
+| (_ :: _) := ff
+
+end hide
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-14').text());">Try it yourself &raquo;</button></div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgce8ddc4" class="outline-3">
+<h3 id="orgce8ddc4"><span class="section-number-3"> 3.3</span> Inhabited Types, Subtypes, and Option Types</h3>
+<div class="outline-text-3" id="text-1-3">
+<p>
+In the Calculus of Inductive Constructions, every term denotes
+something. In particular, if <code>f</code> has a function type and <code>t</code> has the
+corresponding argument type, the <code>f t</code> denotes some object. In other
+words, a function defined on a type has to be define on <i>every</i>
+element of that type, so that every function is total on its domain.
+</p>
+
+<p>
+It often happens that a function is naturally defined only on some
+elements of a type. For example, one can take the head of a list only
+if it is nonempty, and one can divide one rational number or real
+number by another as long as the second is nonzero. There are a number
+of ways of handling that in dependent type theory.
+</p>
+
+<p>
+The first, and simplest, is to totalize the function, by assigning an
+arbitrary or conveniently chosen value where the function would
+otherwise be undefined. For example, it is convenient to take <code>x / 0</code>
+to be equal to <code>0</code>. A downside is that this can run counter to
+mathematical intuitions. But it does give a precise meaning to the
+division symbol, even if it is a nonconventional one. (The treatment
+of undefined values in ordinary mathematics is often ambiguous and
+sloppy anyhow.)
+</p>
+
+<p>
+It helps that the Lean standard library defines a type class,
+<code>inhabited α</code>, that can be used to keep track of types that are known
+to have at least one element, and to infer such an element. The
+expressions <code>default α</code> and <code>arbitrary α</code> both denote the element that
+is inferred. The second is unfolded less eagerly by Lean's elaborator,
+and should be used to indicate that you do not want to make any
+assumptions about the value returned (though ultimately nothing can
+stop a theory making use of the fact that the arbitrary element of
+nat, say, is chosen to be zero). The list library defines the <code>head</code>
+function as follows:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-15' mode="ace/mode/lean" readonly="true">universe u
+variable {α : Type u}
+
+def head [inhabited α] : list α → α
+| []       := default α
+| (a :: l) := a
+</juicy-ace-editor><div id='lean-full-code-15' style='display:none'>universe u
+variable {α : Type u}
+
+def head [inhabited α] : list α → α
+| []       := default α
+| (a :: l) := a
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-15').text());">Try it yourself &raquo;</button></div>
+</div>
+
+<p>
+Another possibility is to add a precondition to the function. We can
+do this because in the CIC, an assertion can be treated as an argument
+to a function. The following function explicitly requires evidence
+that the argument <code>l</code> is not the empty list.
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-16' mode="ace/mode/lean" readonly="true">def first : Π (l : list α), l ≠ [] → α
+| []        h := absurd rfl h
+| (a :: l₀) h := a</juicy-ace-editor><div id='lean-full-code-16' style='display:none'>universe u
+variable {α : Type u}
+
+def first : Π (l : list α), l ≠ [] → α
+| []        h := absurd rfl h
+| (a :: l₀) h := a
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-16').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+This contract ensures that <code>first</code> will never be called to evaluate
+the first element of an empty list. The check is entirely static; the
+evidence is ignored by the bytecode evaluator.
+</p>
+
+<p>
+A closely related solution is to use a <code>subtype</code>. This simply bundles
+together the data and the precondition. 
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-17' mode="ace/mode/lean" readonly="true">def first' : {l₀ // l₀ ≠ []} → α :=
+λ l, first l.1 l.2</juicy-ace-editor><div id='lean-full-code-17' style='display:none'>universe u
+variable {α : Type u}
+
+def first : Π (l : list α), l ≠ [] → α
+| []        h := absurd rfl h
+| (a :: l₀) h := a
+
+def first' : {l₀ // l₀ ≠ []} → α :=
+λ l, first l.1 l.2
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-17').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+Here, the type <code>{l₀ // l₀ ≠ []}</code> consists of (dependent) pairs, where the first
+element is a list and the second is evidence that the list is
+nonempty. In a similar way, <code>{n // (n : ℤ) &gt; 0}</code> denotes the type of
+positive integers. Using subtypes and preconditions can be inconvenient at
+times, because using them requires a mixture of proof and
+calculation. But subtypes are especially useful when the constraints
+are common enough that is pays to develop a library of functions that
+take and return elements satisfying them &#x2014; in other words, when the
+subtype is really worthy of being considered a type in its own right.
+</p>
+
+<p>
+Yet another solution is to signal the success or failure of the function
+on the output, using an <code>option</code> type. This is defined in the standard
+library as follows:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-18' mode="ace/mode/lean" readonly="true">inductive option (α : Type u)
+| none {} : option
+| some    : α → option</juicy-ace-editor><div id='lean-full-code-18' style='display:none'>namespace hide
+
+universe u
+
+inductive option (α : Type u)
+| none {} : option
+| some    : α → option
+
+end hide
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-18').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+You can think of the return value <code>none</code> as signifying that the
+function is undefined at that point, whereas <code>some a</code> denotes a return
+value of <code>a</code>. (The inscription <code>{}</code> after the none constructor
+indicates that the argument <code>α</code> should be marked implicit, even though
+it cannot be inferred from other arguments.) For example, then <code>nth</code>
+element function is defined in the list library as follows:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-19' mode="ace/mode/lean" readonly="true">def nth : list α → nat → option α
+| []       n     := none
+| (a :: l) 0     := some a
+| (a :: l) (n+1) := nth l n</juicy-ace-editor><div id='lean-full-code-19' style='display:none'>universe u
+variables {α : Type u} [inhabited α]
+
+open option nat
+
+def nth : list α → nat → option α
+| []       n     := none
+| (a :: l) 0     := some a
+| (a :: l) (n+1) := nth l n
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-19').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+To use an element <code>oa</code> of type <code>option α</code>, one typically has to
+pattern match on the cases <code>none</code> and <code>some α</code>. Doing this manually in the
+course of a computation can be tedious, but it is much more pleasant
+and natural using <i>monads</i>, which we turn to next.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org62ba731" class="outline-3">
+<h3 id="org62ba731"><span class="section-number-3"> 3.4</span> Monads</h3>
+<div class="outline-text-3" id="text-1-4">
+<p>
+This section assumes that you are familiar with the use of monads in
+functional programming languages, such as Haskell. There are a number
+of tutorials on monads available online, including a chapter of
+<a target='_blank' href="https://leanprover.github.io/programming_in_lean/">Programming in Lean</a>.
+</p>
+
+<p>
+Monads are well supported in Lean: they are straightforward to encode
+in dependent type theory, and class inference can be used to infer
+monads associated with specific types. Lean knows about the option
+monad:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-20' mode="ace/mode/lean" readonly="true">open list
+
+def foo (l₁ l₂ l₃ : list ℕ) : option (list ℕ) :=
+do v₁₀ ← nth l₁ 0,
+   v₂₀ ← nth l₂ 0,
+   v₂₁ ← nth l₂ 1,
+   v₃₀ ← nth l₃ 0,
+   v₃₁ ← nth l₃ 1,
+   v₃₂ ← nth l₃ 2,
+   return [v₁₀, v₂₀, v₂₁, v₃₀, v₃₁, v₃₂]
+
+#eval foo [1, 2, 3] [4, 5] [6, 7]
+#eval foo [1, 2, 3] [4, 5] [6, 7, 8]
+</juicy-ace-editor><div id='lean-full-code-20' style='display:none'>open list
+
+def foo (l₁ l₂ l₃ : list ℕ) : option (list ℕ) :=
+do v₁₀ ← nth l₁ 0,
+   v₂₀ ← nth l₂ 0,
+   v₂₁ ← nth l₂ 1,
+   v₃₀ ← nth l₃ 0,
+   v₃₁ ← nth l₃ 1,
+   v₃₂ ← nth l₃ 2,
+   return [v₁₀, v₂₀, v₂₁, v₃₀, v₃₁, v₃₂]
+
+#eval foo [1, 2, 3] [4, 5] [6, 7]
+#eval foo [1, 2, 3] [4, 5] [6, 7, 8]
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-20').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+Here, if an calls to <code>nth</code> return <code>none</code>, <code>foo</code> returns <code>none</code> as
+well. But if all the calls are successful, the function constructs the
+value on the last line and returns it wrapped with the <code>some</code>
+constructor.
+</p>
+
+<p>
+Lean also knows about the list monad:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-21' mode="ace/mode/lean" readonly="true">open list
+
+def foo : list string :=
+do n ← range 10,
+   a ← ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"],
+   repeat a n
+
+#eval foo
+</juicy-ace-editor><div id='lean-full-code-21' style='display:none'>open list
+
+def foo : list string :=
+do n ← range 10,
+   a ← ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"],
+   repeat a n
+
+#eval foo
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-21').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+Think of the body of <code>foo</code> is choosing a value <code>n</code>
+nondeterministically from <code>range 10</code>, and a value <code>a</code>
+nondeterministically from the given list, and returning the value
+<code>repeat a n</code>, which simply repeats the element <code>a</code> <code>n</code> times. In fact,
+<code>repeat a n</code> is computed for each choices of <code>n</code> and <code>a</code>, and the
+results are concatenated into a single list.
+</p>
+
+<p>
+The standard library also defines a state monad, and a special
+<code>tactic</code> monad provides metaprogramming access to an internal tactic
+state, allowing users to write tactics in Lean. We will return to this
+in a later chapter.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org980b472" class="outline-3">
+<h3 id="org980b472"><span class="section-number-3"> 3.5</span> Input and Output</h3>
+<div class="outline-text-3" id="text-1-5">
+<p>
+Lean can access standard input and output via a special <code>io</code>
+monad. From within the foundational system, the functions <code>put_str</code>
+and <code>get_str</code> are simply unaxiomatized constants, but when executed by
+the virtual machine, the perform the desired operations.
+</p>
+
+<p>
+The input faculty can only be used when running Lean from a command
+line, but standard output is associated to function calls in the
+editor. The following example uses the <code>io</code> monad to output a list of
+instructions solving the <i>Tower of Hanoi</i> game for any number of
+disks.
+</p>
+
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-22' mode="ace/mode/lean" readonly="true">import system.io
+variable [io.interface]
+open io
+
+def hanoi_aux : ℕ → string → string → string → io unit
+| 0     fr to aux := put_str "nothing to do!\n"
+| 1     fr to aux := put_str ("move disk 1 from " ++ fr ++ " to " ++ 
+                               to ++ "\n")
+| (n+2) fr to aux := do hanoi_aux (n+1) fr aux to,
+                        put_str ("move disk " ++ to_string (n+2) ++ 
+                                 " from " ++ fr ++ " to " ++ to ++ "\n"),
+                        hanoi_aux (n+1) aux to fr
+
+def hanoi (n : ℕ) := hanoi_aux n "A" "B" "C"
+
+#eval hanoi 5
+</juicy-ace-editor><div id='lean-full-code-22' style='display:none'>import system.io
+variable [io.interface]
+open io
+
+def hanoi_aux : ℕ → string → string → string → io unit
+| 0     fr to aux := put_str "nothing to do!\n"
+| 1     fr to aux := put_str ("move disk 1 from " ++ fr ++ " to " ++ 
+                               to ++ "\n")
+| (n+2) fr to aux := do hanoi_aux (n+1) fr aux to,
+                        put_str ("move disk " ++ to_string (n+2) ++ 
+                                 " from " ++ fr ++ " to " ++ to ++ "\n"),
+                        hanoi_aux (n+1) aux to fr
+
+def hanoi (n : ℕ) := hanoi_aux n "A" "B" "C"
+
+#eval hanoi 5
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-22').text());">Try it yourself &raquo;</button></div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org11fcbee" class="outline-3">
+<h3 id="org11fcbee"><span class="section-number-3"> 3.6</span> An Example: Abstract Syntax</h3>
+<div class="outline-text-3" id="text-1-6">
+<p>
+We close this chapter with an example that nicely illustrates the
+capacities for algebraic abstraction in Lean and the CIC. We first
+define an abstract type of arithmetic expressions, each of which is
+either a variable, a numeral, a sum, or a product.
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-23' mode="ace/mode/lean" readonly="true">inductive arith_expr
+| var   : ℕ → arith_expr
+| const : ℕ → arith_expr
+| plus  : arith_expr → arith_expr → arith_expr
+| times : arith_expr → arith_expr → arith_expr
+
+open arith_expr
+
+def sample_expr := plus (times (const 7) (var 0)) (times (const 2) (var 1))
+</juicy-ace-editor><div id='lean-full-code-23' style='display:none'>inductive arith_expr
+| var   : ℕ → arith_expr
+| const : ℕ → arith_expr
+| plus  : arith_expr → arith_expr → arith_expr
+| times : arith_expr → arith_expr → arith_expr
+
+open arith_expr
+
+def sample_expr := plus (times (const 7) (var 0)) (times (const 2) (var 1))
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-23').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+Notice that the variables are indexed by the natural numbers.
+</p>
+
+<p>
+We can evaluate an arithmetic expression in any semiring, given an
+assignment to the variables. We can define a variable assignment to be
+simply a function from the natural numbers to elements of the carrier
+type, but it is more convenient to specify an assignment by giving a
+finite list of values for the initial variables and using a default
+value elsewhere.
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-24' mode="ace/mode/lean" readonly="true">universe u
+
+def var_assignment (α : Type u) := ℕ → α
+
+def var_assignment_of_list {α : Type u} [inhabited α] (l : list α) : var_assignment α :=
+λ n, match (list.nth l n) with
+| some a := a
+| none   := arbitrary α
+end
+
+section
+variables (α : Type u) [inhabited α]
+instance : has_coe (list α) (var_assignment α) := ⟨var_assignment_of_list⟩
+end
+</juicy-ace-editor><div id='lean-full-code-24' style='display:none'>universe u
+
+def var_assignment (α : Type u) := ℕ → α
+
+def var_assignment_of_list {α : Type u} [inhabited α] (l : list α) : var_assignment α :=
+λ n, match (list.nth l n) with
+| some a := a
+| none   := arbitrary α
+end
+
+section
+variables (α : Type u) [inhabited α]
+instance : has_coe (list α) (var_assignment α) := ⟨var_assignment_of_list⟩
+end
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-24').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+The instance declaration at the end declares a 
+<code>var_assignment_to_list</code> to be coercion. We need to know that <code>α</code> is
+inhabited to be able to return a default value for variables whose
+indices are largere than the length of the list.
+</p>
+
+<p>
+We can interpret a numeral in any semiring. The following definition
+uses well-founded recursion to carry out the cast; we use the <code>div</code>
+and <code>mod</code> functions to carry the translation efficiently. The two
+<code>have</code> statements give facts that are needed to justify the
+well-founded recursion.
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-25' mode="ace/mode/lean" readonly="true">universe u
+
+namespace semiring
+variables {α : Type u} [semiring α]
+
+def of_nat : ℕ → α 
+| 0 := 0
+| 1 := 1
+| (n+2) := 
+  have n / 2 &lt; n + 2, 
+    begin abstract { apply lt_of_le_of_lt, apply nat.div_le_self,
+                     apply nat.lt_add_of_pos_right, apply nat.succ_pos } end,
+  have n % 2 &lt; n + 2, 
+    begin abstract { apply nat.lt_add_left, apply nat.mod_lt,
+                     apply nat.succ_pos } end,
+  2 * of_nat (n / 2) + of_nat (n % 2) 
+
+end semiring
+</juicy-ace-editor><div id='lean-full-code-25' style='display:none'>universe u
+
+namespace semiring
+variables {α : Type u} [semiring α]
+
+def of_nat : ℕ → α 
+| 0 := 0
+| 1 := 1
+| (n+2) := 
+  have n / 2 &lt; n + 2, 
+    begin abstract { apply lt_of_le_of_lt, apply nat.div_le_self,
+                     apply nat.lt_add_of_pos_right, apply nat.succ_pos } end,
+  have n % 2 &lt; n + 2, 
+    begin abstract { apply nat.lt_add_left, apply nat.mod_lt,
+                     apply nat.succ_pos } end,
+  2 * of_nat (n / 2) + of_nat (n % 2) 
+
+end semiring
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-25').text());">Try it yourself &raquo;</button></div>
+</div>
+
+<p>
+We these in hand, the evaluation function for arithmetic expressions
+can now be defined using a straightforward recursion on syntax:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-26' mode="ace/mode/lean" readonly="true">variables (α : Type u) [semiring α]
+
+def arith_eval (v : var_assignment α) : arith_expr → α
+| (var n)       := v n
+| (const n)     := semiring.of_nat n
+| (plus e₁ e₂)  := arith_eval e₁ + arith_eval e₂
+| (times e₁ e₂) := arith_eval e₁ * arith_eval e₂</juicy-ace-editor><div id='lean-full-code-26' style='display:none'>universe u
+
+inductive arith_expr
+| var   : ℕ → arith_expr
+| const : ℕ → arith_expr
+| plus  : arith_expr → arith_expr → arith_expr
+| times : arith_expr → arith_expr → arith_expr
+
+open arith_expr
+
+def sample_expr := plus (times (const 7) (var 0)) (times (const 2) (var 1))
+
+namespace arith_expr
+
+def var_assignment (α : Type u) := ℕ → α
+
+def var_assignment_of_list {α : Type u} [inhabited α] (l : list α) : var_assignment α :=
+λ n, match (list.nth l n) with
+| some a := a
+| none   := arbitrary α
+end
+
+section
+instance {α : Type u} [add_monoid α] : inhabited α := ⟨0⟩ 
+
+variables (α : Type u) [inhabited α]
+instance : has_coe (list α) (var_assignment α) := ⟨var_assignment_of_list⟩
+end
+
+namespace semiring
+variables {α : Type u} [semiring α]
+
+def of_nat : ℕ → α 
+| 0 := 0
+| 1 := 1
+| (n+2) := 
+  have n / 2 &lt; n + 2, 
+    begin abstract { apply lt_of_le_of_lt, apply nat.div_le_self,
+                     apply nat.lt_add_of_pos_right, apply nat.succ_pos } end,
+  have n % 2 &lt; n + 2, 
+    begin abstract { apply nat.lt_add_left, apply nat.mod_lt,
+                     apply nat.succ_pos } end,
+  2 * of_nat (n / 2) + of_nat (n % 2) 
+
+end semiring
+
+variables (α : Type u) [semiring α]
+
+def arith_eval (v : var_assignment α) : arith_expr → α
+| (var n)       := v n
+| (const n)     := semiring.of_nat n
+| (plus e₁ e₂)  := arith_eval e₁ + arith_eval e₂
+| (times e₁ e₂) := arith_eval e₁ * arith_eval e₂
+
+end arith_expr
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-26').text());">Try it yourself &raquo;</button></div>
+</div>
+
+<p>
+We can now try it out:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-27' mode="ace/mode/lean" readonly="true">#eval arith_eval ℕ ↑[5, 7]        sample_expr
+#eval arith_eval ℕ ↑[5, 7, 12]    sample_expr
+#eval arith_eval ℕ ↑[5]           sample_expr
+
+#check arith_eval ℤ ↑[(5 : ℤ), 7] sample_expr</juicy-ace-editor><div id='lean-full-code-27' style='display:none'>universe u
+
+inductive arith_expr
+| var : ℕ → arith_expr
+| const : ℕ → arith_expr
+| plus : arith_expr → arith_expr → arith_expr
+| times : arith_expr → arith_expr → arith_expr
+
+open arith_expr
+
+def sample_expr := plus (times (const 7) (var 0)) (times (const 2) (var 1))
+
+namespace arith_expr
+
+def var_assignment (α : Type u) := ℕ → α
+
+def var_assignment_of_list {α : Type u} [inhabited α] (l : list α) : var_assignment α :=
+λ n, match (list.nth l n) with
+| some a := a
+| none   := arbitrary α
+end
+
+section
+instance {α : Type u} [add_monoid α] : inhabited α := ⟨0⟩ 
+
+variables (α : Type u) [inhabited α]
+instance : has_coe (list α) (var_assignment α) := ⟨var_assignment_of_list⟩
+end
+
+namespace semiring
+variables {α : Type u} [semiring α]
+
+def of_nat : ℕ → α 
+| 0 := 0
+| 1 := 1
+| (n+2) := 
+  have n / 2 &lt; n + 2, 
+    begin abstract { apply lt_of_le_of_lt, apply nat.div_le_self,
+                     apply nat.lt_add_of_pos_right, apply nat.succ_pos } end,
+  have n % 2 &lt; n + 2, 
+    begin abstract { apply nat.lt_add_left, apply nat.mod_lt,
+                     apply nat.succ_pos } end,
+  2 * of_nat (n / 2) + of_nat (n % 2) 
+
+end semiring
+
+variables (α : Type u) [semiring α]
+
+def arith_eval (v : var_assignment α) : arith_expr → α
+| (var n)       := v n
+| (const n)     := semiring.of_nat n
+| (plus e₁ e₂)  := arith_eval e₁ + arith_eval e₂
+| (times e₁ e₂) := arith_eval e₁ * arith_eval e₂
+
+
+#eval arith_eval ℕ ↑[5, 7]        sample_expr
+#eval arith_eval ℕ ↑[5, 7, 12]    sample_expr
+#eval arith_eval ℕ ↑[5]           sample_expr
+
+#check arith_eval ℤ ↑[(5 : ℤ), 7] sample_expr
+
+end arith_expr
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-27').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+In these examples, we help out the elaborator by indicating
+that we intend to coerce the list to a
+<code>var_assignment</code>.
+</p>
+</div>
+</div>
+</div>
+</div>
+</body>
+</html>

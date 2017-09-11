@@ -1,0 +1,1204 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2017-09-10 Sun 21:42 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>An Introduction to Lean</title>
+<meta name="generator" content="Org mode" />
+<meta name="author" content="[[http://www.andrew.cmu.edu/user/avigad][Jeremy Avigad]]Jeremy Avigad, [[http://leodemoura.github.io][Leonardo de Moura]]Leonardo de Moura, [[https://gebner.org/][Gabriel Ebner]]Gabriel Ebner, and Sebastian Ullrich" />
+<link rel="stylesheet" href="css/tutorial.css"/>
+<link rel="stylesheet" href="css/code.css"/>
+<script type="text/javascript" charset="utf-8">if(!window.PolymerGestures) { var head = document.getElementsByTagName('head')[0]; var js = document.createElement("script"); js.type = "text/javascript"; js.src = "//cdn.jsdelivr.net/webcomponentsjs/0.7.20/webcomponents.min.js"; head.appendChild(js); } </script>
+<link rel='import' href='juicy-ace-editor.html'/>
+</head>
+<body>
+<div id="content">
+<h1 class="title">An Introduction to Lean</h1>
+
+<div id="outline-container-org53491e7" class="outline-2">
+<h2 id="Defining_Objects_in_Lean"><a id="org53491e7"></a><span class="section-number-2"> 2</span> Defining Objects in Lean</h2>
+<div class="outline-text-2" id="text-Defining_Objects_in_Lean">
+<p>
+As a foundational framework, the Calculus of Inductive Constructions,
+or CIC, is flexible enough to define all kinds of mathematical
+objects. It can define the number systems, ranging from the natural
+numbers to the complex numbers; algebraic structures, from semigroups
+to categories and modules over an arbitrary ring; limits, derivatives,
+and integrals, and other components of real and complex analysis;
+vector spaces and matrices; measure spaces; and much more.
+</p>
+
+<p>
+This flexibility is not so mysterious. Common set-theoretic
+constructions are mirrored in dependent type theory, so type-theoretic
+definitions of many mathematical objects are not so different from
+their set-theoretic counterparts. As the name suggests, the notion of
+an inductively defined type is central to the CIC, and forms the basis
+for a number of fundamental constructions.
+</p>
+
+<p>
+There are important differences between set theory and type theory,
+however. In axiomatic set theory, there is only fundamentally one type
+of object, in that every object is a set. In type theory, a natural
+number, a function from the reals to the reals, and a vector space are
+all different types of objects, and it doesn't even make sense to ask
+whether an object of one type is equal to an object of
+another. Similarly, it does not make sense to apply a vector operation
+to a natural number, without (implicitly or explicitly) coercing the
+natural number to a vector in some way. Giving up the free-wheeling
+flexibility of set theory has some disadvantages, but it has a number
+of advantages, too. It makes it possible to communicate more
+efficiently, since a good deal of information can be inferred from an
+understanding of the types of objects involved. A typing discipline
+also makes it possible for a system like Lean to detect and flag
+errors, such as sending the wrong sorts of arguments to a function.
+</p>
+
+<p>
+Other differences between set-theoretic foundations and the type
+theoretic foundation implemented by Lean stem from the fact that
+computation is a central part of the latter. We will see below that in
+Lean one can define noncomputable functions and operations, as is
+common in everyday mathematics. But Lean tracks the use of such
+classical constructions, and any definition in Lean that is not
+explicitly tagged as noncomputable generates executable code. Below,
+we will illustrate this, by evaluating computable objects as we go. We
+will discuss computation in greater detail in the next chapter.
+</p>
+</div>
+
+
+<div id="outline-container-org56217aa" class="outline-3">
+<h3 id="org56217aa"><span class="section-number-3"> 2.1</span> Some Basic Types</h3>
+<div class="outline-text-3" id="text-1-1">
+<p>
+Remember that, in Lean:
+</p>
+<ul class="org-ul">
+<li><code>#check</code> can be used a check the type of an expression.</li>
+<li><code>#print</code> can be used to print information about an identifier, for
+example, the definition of a defined constant.</li>
+<li><code>#reduce</code> can be used to normalize a symbolic expression.</li>
+<li><code>#eval</code> can be used to run the bytecode evaluator on any closed
+term that has a computational interpretation.</li>
+</ul>
+
+<p>
+Lean's standard library defines a number of data types, such as <code>nat</code>,
+<code>int</code>, <code>list</code>, and <code>bool</code>.
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-1' mode="ace/mode/lean" readonly="true">#check nat
+#print nat
+
+#check int
+#print int
+
+#check list
+#print list
+
+#check bool
+#print bool
+</juicy-ace-editor><div id='lean-full-code-1' style='display:none'>#check nat
+#print nat
+
+#check int
+#print int
+
+#check list
+#print list
+
+#check bool
+#print bool
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-1').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+You can use the unicode symbols <code>ℕ</code> and <code>ℤ</code> for nat and int,
+respectively. The first can be entered with <code>\N</code> or <code>\nat</code>, and the
+second can be entered with <code>\Z</code> or <code>\int</code>.
+</p>
+
+<p>
+The library includes standard operations on these types:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-2' mode="ace/mode/lean" readonly="true">#check 3 + 6 * 9
+#eval 3 + 6 * 9
+
+#check 1 :: 2 :: 3 :: [4, 5] ++ [6, 7, 8]
+#eval 1 :: 2 :: 3 :: [4, 5] ++ [6, 7, 8]
+
+#check tt &amp;&amp; (ff || tt)
+#eval tt &amp;&amp; (ff || tt)
+</juicy-ace-editor><div id='lean-full-code-2' style='display:none'>#check 3 + 6 * 9
+#eval 3 + 6 * 9
+
+#check 1 :: 2 :: 3 :: [4, 5] ++ [6, 7, 8]
+#eval 1 :: 2 :: 3 :: [4, 5] ++ [6, 7, 8]
+
+#check tt &amp;&amp; (ff || tt)
+#eval tt &amp;&amp; (ff || tt)
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-2').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+Remember that, by default, a numeral denotes a natural number. You can
+always specify an intended type <code>t</code> for an expression <code>e</code> by writing
+<code>(e : t)</code>. In that case, Lean does its best to interpret the expression as
+an object of the given type, and raises an error if it does not
+succeed.
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-3' mode="ace/mode/lean" readonly="true">#check (3 : ℤ)
+#check (3 : ℤ) + 6 * 9
+#check (3 + 6 * 9 : ℤ)
+
+#eval (3 + 6 * 9 : ℤ)
+</juicy-ace-editor><div id='lean-full-code-3' style='display:none'>#check (3 : ℤ)
+#check (3 : ℤ) + 6 * 9
+#check (3 + 6 * 9 : ℤ)
+
+#eval (3 + 6 * 9 : ℤ)
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-3').text());">Try it yourself &raquo;</button></div>
+</div>
+
+<p>
+We can also declare variables ranging over elements and types.
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-4' mode="ace/mode/lean" readonly="true">variables m n k : ℕ
+variables u v w : ℤ
+variable  α : Type
+variables l₁ l₂ : list ℕ
+variables s₁ s₂ : list α
+variable  a : α
+
+#check m + n * k
+#check u + v * w
+#check m :: l₁ ++ l₂
+#check s₁ ++ a :: s₂
+</juicy-ace-editor><div id='lean-full-code-4' style='display:none'>variables m n k : ℕ
+variables u v w : ℤ
+variable  α : Type
+variables l₁ l₂ : list ℕ
+variables s₁ s₂ : list α
+variable  a : α
+
+#check m + n * k
+#check u + v * w
+#check m :: l₁ ++ l₂
+#check s₁ ++ a :: s₂
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-4').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+The standard library adopts the convention of using the Greek letters <code>α</code>,
+<code>β</code>, and <code>γ</code> to range over types. You can type these with <code>\a</code>, <code>\b</code>, and
+<code>\g</code>, respectively. You can type subscripts with <code>\0</code>, <code>\1</code>, <code>\2</code>, and
+so on.
+</p>
+
+<p>
+Lean will insert coercions automatically:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-5' mode="ace/mode/lean" readonly="true">#check v + m</juicy-ace-editor><div id='lean-full-code-5' style='display:none'>variables m n k : ℕ
+variables u v w : ℤ
+
+#check v + m
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-5').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+The presence of a coercion is indicated by Lean's output, <code>v + ↑m :
+ℤ</code>. Since Lean infers types sequentially as it processes an
+expression, you need to indicate the coercion manually if you write
+the arguments in the other order:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-6' mode="ace/mode/lean" readonly="true">#check ↑m + v</juicy-ace-editor><div id='lean-full-code-6' style='display:none'>variables m n k : ℕ
+variables u v w : ℤ
+
+#check ↑m + v
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-6').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+You can type the up arrow by writing <code>\u</code>. This is notation for a
+generic coercion function, and Lean finds the appropriate one using
+type classes, as described below. The notations <code>+</code>, <code>*</code>, <code>++</code>
+similarly denote functions defined generically on any type that
+supports the relevant operations:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-7' mode="ace/mode/lean" readonly="true">#check @has_add.add
+#print has_add.add
+
+#check @has_mul.mul
+#print has_mul.mul
+
+#check @append
+#print append
+</juicy-ace-editor><div id='lean-full-code-7' style='display:none'>#check @has_add.add
+#print has_add.add
+
+#check @has_mul.mul
+#print has_mul.mul
+
+#check @append
+#print append
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-7').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+Here, the <code>@</code> symbol before the name of the function indicates that
+Lean should display arguments that are usually left implicit. These
+are called, unsurprisingly, <i>implicit arguments</i>. In the examples
+above, type class resolution finds the relevant operations, which are
+declared in the relevant <i>namespaces</i>.
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-8' mode="ace/mode/lean" readonly="true">#check nat.add
+#check nat.mul
+#check list.append
+#check list.cons
+</juicy-ace-editor><div id='lean-full-code-8' style='display:none'>#check nat.add
+#check nat.mul
+#check list.append
+#check list.cons
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-8').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+When generic functions and notations are available, however, it is
+usually better to use them, because Lean's automation is designed to
+work well with generic functions and facts. Incidentally, when infix
+notation is defined for a binary operation, Lean's parser will let you
+put the notation in parentheses to refer to the operation in prefix
+form:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-9' mode="ace/mode/lean" readonly="true">#check (+)
+#check (*)
+#check (≤)
+</juicy-ace-editor><div id='lean-full-code-9' style='display:none'>#check (+)
+#check (*)
+#check (≤)
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-9').text());">Try it yourself &raquo;</button></div>
+</div>
+
+<p>
+Lean knows about Cartesian products and pairs:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-10' mode="ace/mode/lean" readonly="true">variables α β : Type
+variables (a₁ a₂ : α) (b : β) (n : ℕ)
+variables (p : α × β) (q : α × ℕ)
+
+#check α × β
+#check (a₁, a₂)
+#check (n, b)
+#check p.1
+#check p.2
+
+#reduce (n, b).1
+#reduce (2, 3).1
+#eval (2, 3).1
+</juicy-ace-editor><div id='lean-full-code-10' style='display:none'>variables α β : Type
+variables (a₁ a₂ : α) (b : β) (n : ℕ)
+variables (p : α × β) (q : α × ℕ)
+
+#check α × β
+#check (a₁, a₂)
+#check (n, b)
+#check p.1
+#check p.2
+
+#reduce (n, b).1
+#reduce (2, 3).1
+#eval (2, 3).1
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-10').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+It interprets tuples as iterated products, associated to the right:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-11' mode="ace/mode/lean" readonly="true">variables α β : Type
+variables (a₁ a₂ : α) (b : β) (n : ℕ)
+
+#check (n, a₁, b)
+#reduce (n, a₁, b).2
+#reduce (n, a₁, b).2.2
+</juicy-ace-editor><div id='lean-full-code-11' style='display:none'>variables α β : Type
+variables (a₁ a₂ : α) (b : β) (n : ℕ)
+
+#check (n, a₁, b)
+#reduce (n, a₁, b).2
+#reduce (n, a₁, b).2.2
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-11').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+Lean also knows about subtypes and option types, which are described
+in the next chapter.
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgfd3b2c8" class="outline-3">
+<h3 id="orgfd3b2c8"><span class="section-number-3"> 2.2</span> Defining Functions</h3>
+<div class="outline-text-3" id="text-1-2">
+<p>
+In Lean, one can define a new constant with the <code>definition</code> command,
+which can be abbreviated to <code>def</code>.
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-12' mode="ace/mode/lean" readonly="true">definition foo : ℕ := 3
+
+def bar : ℕ := 2 + 2
+</juicy-ace-editor><div id='lean-full-code-12' style='display:none'>definition foo : ℕ := 3
+
+def bar : ℕ := 2 + 2
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-12').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+As with the <code>#check</code> command, Lean first attempts to elaborate the
+given expression, which is to say, fill in all the information that is
+left implicit. After that, it checks to make sure that the expression
+has the stated type. Assuming it succeeds, it creates a new constant
+with the given name and type, associates it to the expression after
+the <code>:=</code>, and stores it in the environment.
+</p>
+
+<p>
+The type of functions from <code>α</code> to <code>β</code> is denoted <code>α → β</code>. We have
+already seen that a function <code>f</code> is applied to an element <code>x</code> in the
+domain type by writing <code>f x</code>.
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-13' mode="ace/mode/lean" readonly="true">variables α β : Type
+variables (a₁ a₂ : α) (b : β) (n : ℕ)
+variables f : ℕ → α
+variables g : α → β → ℕ
+
+#check f n
+#check g a₁
+#check g a₂ b
+#check f (g a₂ b)
+#check g (f (g a₂ b))
+</juicy-ace-editor><div id='lean-full-code-13' style='display:none'>variables α β : Type
+variables (a₁ a₂ : α) (b : β) (n : ℕ)
+variables f : ℕ → α
+variables g : α → β → ℕ
+
+#check f n
+#check g a₁
+#check g a₂ b
+#check f (g a₂ b)
+#check g (f (g a₂ b))
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-13').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+Conversely, functions are introduced using <code>λ</code> abstraction.
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-14' mode="ace/mode/lean" readonly="true">variables (α : Type) (n : ℕ) (i : ℤ)
+
+#check λ x : ℕ, x + 3
+#check λ x, x + 3
+#check λ x, x + n
+#check λ x, x + i
+#check λ x y, x + y + 1
+#check λ x : α, x
+</juicy-ace-editor><div id='lean-full-code-14' style='display:none'>variables (α : Type) (n : ℕ) (i : ℤ)
+
+#check λ x : ℕ, x + 3
+#check λ x, x + 3
+#check λ x, x + n
+#check λ x, x + i
+#check λ x y, x + y + 1
+#check λ x : α, x
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-14').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+As the examples make clear, you can leave out the type of the
+abstracted variable when it can be inferred. The following two
+definitions mean the same thing:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-15' mode="ace/mode/lean" readonly="true">def foo : ℕ → ℕ := λ x : ℕ, x + 3
+def bar := λ x, x + 3
+</juicy-ace-editor><div id='lean-full-code-15' style='display:none'>def foo : ℕ → ℕ := λ x : ℕ, x + 3
+def bar := λ x, x + 3
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-15').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+Instead of using a lambda, you can abstract variables by putting them
+before the colon:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-16' mode="ace/mode/lean" readonly="true">def foo (x y : ℕ) : ℕ := x + y + 3
+def bar x y := x + y + 3
+</juicy-ace-editor><div id='lean-full-code-16' style='display:none'>def foo (x y : ℕ) : ℕ := x + y + 3
+def bar x y := x + y + 3
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-16').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+You can even test a definition without adding it to the environment,
+using the <code>example</code> command:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-17' mode="ace/mode/lean" readonly="true">example x y := x + y + 3
+</juicy-ace-editor><div id='lean-full-code-17' style='display:none'>example x y := x + y + 3
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-17').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+When variables have been declared, functions implicitly depend on the
+variables mentioned in the definition:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-18' mode="ace/mode/lean" readonly="true">variables (α : Type) (x : α)
+variables m n : ℕ
+
+def foo := x
+def bar := m + n + 3
+def baz k := m + k + 3
+
+#check foo
+#check bar
+#check baz
+</juicy-ace-editor><div id='lean-full-code-18' style='display:none'>variables (α : Type) (x : α)
+variables m n : ℕ
+
+def foo := x
+def bar := m + n + 3
+def baz k := m + k + 3
+
+#check foo
+#check bar
+#check baz
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-18').text());">Try it yourself &raquo;</button></div>
+</div>
+
+<p>
+Evaluating expressions involving abstraction and application has the expected behavior:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-19' mode="ace/mode/lean" readonly="true">#reduce (λ x, x + 3) 2
+#eval (λ x, x + 3) 2
+
+def foo (x : ℕ) : ℕ := x + 3
+
+#reduce foo 2
+#eval foo 2
+</juicy-ace-editor><div id='lean-full-code-19' style='display:none'>#reduce (λ x, x + 3) 2
+#eval (λ x, x + 3) 2
+
+def foo (x : ℕ) : ℕ := x + 3
+
+#reduce foo 2
+#eval foo 2
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-19').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+Both expressions evaluate to 5.
+</p>
+
+<p>
+In the CIC, types are just certain kinds of objects, so functions can
+depend on types. For example, the following defines a polymorphic
+identity function:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-20' mode="ace/mode/lean" readonly="true">def id (α : Type) (x : α) : α := x
+
+#check id ℕ 3
+#eval id ℕ 3
+
+#check id</juicy-ace-editor><div id='lean-full-code-20' style='display:none'>namespace hide
+
+def id (α : Type) (x : α) : α := x
+
+#check id ℕ 3
+#eval id ℕ 3
+
+#check id
+
+end hide
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-20').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+Lean indicates that the type of <code>id</code> is <code>Π α : Type, α → α</code>. This is
+an example of a <i>pi type</i>, also known as a dependent function type,
+since the type of the second argument to <code>id</code> depends on the first.
+</p>
+
+<p>
+It is generally redundant to have to give the first argument to <code>id</code>
+explicitly, since it can be inferred from the second argument. Using
+curly braces marks the argument as <i>implicit</i>.
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-21' mode="ace/mode/lean" readonly="true">def id {α : Type} (x : α) : α := x
+
+#check id 3
+#eval id 3
+
+#check id</juicy-ace-editor><div id='lean-full-code-21' style='display:none'>namespace hide
+
+def id {α : Type} (x : α) : α := x
+
+#check id 3
+#eval id 3
+
+#check id
+
+end hide
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-21').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+In case an implicit argument follows the last given argument in a
+function application, Lean inserts the implicit argument eagerly and
+tries to infer it. Using double curly braces <code>{{</code> &#x2026; <code>}}</code>, or the
+unicode equivalents obtained with <code>\{{</code> and <code>\}}</code>, tells the parser to
+be more conservative about inserting the argument. The difference is
+illustrated below.
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-22' mode="ace/mode/lean" readonly="true">def id₁ {α : Type} (x : α) : α := x
+def id₂ ⦃α : Type⦄ (x : α) : α := x
+
+#check (id₁ : ℕ → ℕ)
+#check (id₂ : Π α : Type, α → α)
+</juicy-ace-editor><div id='lean-full-code-22' style='display:none'>def id₁ {α : Type} (x : α) : α := x
+def id₂ ⦃α : Type⦄ (x : α) : α := x
+
+#check (id₁ : ℕ → ℕ)
+#check (id₂ : Π α : Type, α → α)
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-22').text());">Try it yourself &raquo;</button></div>
+</div>
+
+<p>
+In the next section, we will see that Lean supports a hierarchy of
+type universes, so that the following definition of the identity
+function is more general:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-23' mode="ace/mode/lean" readonly="true">universe u
+def id {α : Type u} (x : α) := x</juicy-ace-editor><div id='lean-full-code-23' style='display:none'>namespace hide
+
+universe u
+def id {α : Type u} (x : α) := x
+
+end hide
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-23').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+If you <code>#check @list.append</code>, you will see that, similarly, the append
+function takes two lists of elements of any type, where the type can
+occur in any type universe.
+</p>
+
+<p>
+Incidentally, subsequent arguments to a dependent function can depend
+on arbitrary parameters, not just other types:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-24' mode="ace/mode/lean" readonly="true">variable vec : ℕ → Type
+variable foo : Π {n : ℕ}, vec n → vec n
+variable v : vec 3
+
+#check foo v
+</juicy-ace-editor><div id='lean-full-code-24' style='display:none'>variable vec : ℕ → Type
+variable foo : Π {n : ℕ}, vec n → vec n
+variable v : vec 3
+
+#check foo v
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-24').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+This is precisely the sense in which dependent type theory is dependent.
+</p>
+
+<p>
+The CIC also supports recursive definitions on inductively defined
+types.
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-25' mode="ace/mode/lean" readonly="true">open nat
+
+def exp (x : ℕ) : ℕ → ℕ
+| 0      := 1
+| (succ n) := exp n * (succ n)
+</juicy-ace-editor><div id='lean-full-code-25' style='display:none'>open nat
+
+def exp (x : ℕ) : ℕ → ℕ
+| 0      := 1
+| (succ n) := exp n * (succ n)
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-25').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+We will provide lots of examples of those in the next chapter.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org3ca1428" class="outline-3">
+<h3 id="org3ca1428"><span class="section-number-3"> 2.3</span> Defining New Types</h3>
+<div class="outline-text-3" id="text-1-3">
+<p>
+In the version of the Calculus of Inductive Constructions implemented
+by Lean, we start with a sequence of type universes, <code>Sort 0</code>, <code>Sort
+1</code>, <code>Sort 2</code>, <code>Sort 3</code>, &#x2026; The universe <code>Sort 0</code> is called <code>Prop</code> and
+has special properties that we will describe later. <code>Type u</code> is a
+syntactic sugar for <code>Sort (u+1)</code>. For each <code>u</code>, an element <code>t : Type u</code> is itself a type. If you
+execute the following,
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-26' mode="ace/mode/lean" readonly="true">universe u
+#check Type u
+</juicy-ace-editor><div id='lean-full-code-26' style='display:none'>universe u
+#check Type u
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-26').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+you will see that each <code>Type u</code> itself has type <code>Type (u+1)</code>. The notation
+<code>Type</code> is shorthand for <code>Type 0</code>, which is a shorthand for <code>Sort 1</code>.
+</p>
+
+<p>
+In addition to the type universes, the Calculus of Inductive
+Constructions provides two means of forming new types:
+</p>
+<ul class="org-ul">
+<li>pi types</li>
+<li>inductive types</li>
+</ul>
+<p>
+Lean provides an additional means of forming new types:
+</p>
+<ul class="org-ul">
+<li>quotient types</li>
+</ul>
+<p>
+We discussed pi types in the last section. Quotient types provide a
+means of defining a new type given a type and an equivalence relation
+on that type. They are used in the standard library to define, for
+example, the rational numbers, and a computational representation of
+finite sets (as lists, without duplicates, up to permutation).
+</p>
+
+<p>
+Inductive types are suprisingly useful. The natural numbers are
+defined inductively:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-27' mode="ace/mode/lean" readonly="true">inductive nat : Type
+| zero : nat
+| succ : nat → nat</juicy-ace-editor><div id='lean-full-code-27' style='display:none'>namespace hide
+
+inductive nat : Type
+| zero : nat
+| succ : nat → nat
+
+end hide
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-27').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+So is the type of lists of elements of a given type <code>α</code>:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-28' mode="ace/mode/lean" readonly="true">universe u
+
+inductive list (α : Type u) : Type u
+| nil  : list
+| cons : α → list → list</juicy-ace-editor><div id='lean-full-code-28' style='display:none'>namespace hide
+
+universe u
+
+inductive list (α : Type u) : Type u
+| nil  : list
+| cons : α → list → list
+
+end hide
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-28').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+The booleans form an inductive type, as do, indeed, any finitely
+enumerated type:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-29' mode="ace/mode/lean" readonly="true">inductive bool : Type
+| tt : bool
+| ff : bool
+
+inductive Beatle : Type
+| John   : Beatle
+| Paul   : Beatle
+| George : Beatle
+| Ringo  : Beatle</juicy-ace-editor><div id='lean-full-code-29' style='display:none'>namespace hide
+
+inductive bool : Type
+| tt : bool
+| ff : bool
+
+inductive Beatle : Type
+| John   : Beatle
+| Paul   : Beatle
+| George : Beatle
+| Ringo  : Beatle
+end hide
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-29').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+So are the type of binary trees, and the type of countably branching
+trees in which every node has children indexed by the type of natural
+numbers:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-30' mode="ace/mode/lean" readonly="true">inductive binary_tree : Type
+| empty : binary_tree
+| cons  : binary_tree → binary_tree → binary_tree
+
+inductive nat_tree : Type
+| empty : nat_tree
+| sup   : (ℕ → nat_tree) → nat_tree
+</juicy-ace-editor><div id='lean-full-code-30' style='display:none'>inductive binary_tree : Type
+| empty : binary_tree
+| cons  : binary_tree → binary_tree → binary_tree
+
+inductive nat_tree : Type
+| empty : nat_tree
+| sup   : (ℕ → nat_tree) → nat_tree
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-30').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+What these examples all have in common is that the associated types
+are built up freely and inductively by the given <i>constructors</i>. For
+example, we can build some binary trees:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-31' mode="ace/mode/lean" readonly="true">#check binary_tree.empty
+#check binary_tree.cons (binary_tree.empty) (binary_tree.empty)</juicy-ace-editor><div id='lean-full-code-31' style='display:none'>inductive binary_tree : Type
+| empty : binary_tree
+| cons  : binary_tree → binary_tree → binary_tree
+
+#check binary_tree.empty
+#check binary_tree.cons (binary_tree.empty) (binary_tree.empty)
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-31').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+If we open the namespace <code>binary_tree</code>, we can use shorter names:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-32' mode="ace/mode/lean" readonly="true">open binary_tree
+
+#check cons empty (cons (cons empty empty) empty)</juicy-ace-editor><div id='lean-full-code-32' style='display:none'>inductive binary_tree : Type
+| empty : binary_tree
+| cons  : binary_tree → binary_tree → binary_tree
+
+open binary_tree
+
+#check cons empty (cons (cons empty empty) empty)
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-32').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+In the Lean library, the identifier <code>empty</code> is used as a generic
+notation for things like the empty set, so opening the <code>binary_tree</code>
+namespaces means that the constant is overloaded. If you write <code>#check
+empty</code>, Lean will complain about the overload; you need to say
+something like <code>#check (empty : binary_tree)</code> to disambiguate.
+</p>
+
+<p>
+The <code>inductive</code> command axiomatically declares all of the following:
+</p>
+<ul class="org-ul">
+<li>A constant, to denote the new type.</li>
+<li>The associated constructors.</li>
+<li>A corresponding <i>eliminator</i>.</li>
+</ul>
+<p>
+The latter gives rise to the principles of recursion and induction
+that we will encounter in the next two chapters.
+</p>
+
+<p>
+We will not give a precise specification of the inductive data types
+allowed by Lean, but only note here that the description is fairly
+small and straightforward, and can easily be given a set-theoretic
+interpretation. Lean also allows <i>mutual</i> inductive types and <i>nested</i>
+inductive types. As an example, in the definition below, the type
+under definition appears as a parameter to the <code>list</code> type:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-33' mode="ace/mode/lean" readonly="true">inductive tree (α : Type) : Type
+| node : α → list tree → tree
+</juicy-ace-editor><div id='lean-full-code-33' style='display:none'>inductive tree (α : Type) : Type
+| node : α → list tree → tree
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-33').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+Such definitions are <i>not</i> among Lean's axoimatic primitives; rather,
+they are compiled down to more primitive constructions.
+</p>
+</div>
+</div>
+
+<div id="outline-container-orga2f36f9" class="outline-3">
+<h3 id="orga2f36f9"><span class="section-number-3"> 2.4</span> Records and Structures</h3>
+<div class="outline-text-3" id="text-1-4">
+<p>
+When computer scientists bundle data together, they tend to call the
+result a <i>record</i>. When mathematicians do the same, they call it a
+<i>structure</i>. Lean uses the keyword <code>structure</code> to introduce inductive
+definitions with a single constructor.
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-34' mode="ace/mode/lean" readonly="true">structure color : Type :=
+mk :: (red : ℕ) (green : ℕ) (blue : ℕ) (name : string)
+</juicy-ace-editor><div id='lean-full-code-34' style='display:none'>structure color : Type :=
+mk :: (red : ℕ) (green : ℕ) (blue : ℕ) (name : string)
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-34').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+Here, <code>mk</code> is the constructor (if ommitted, Lean assumes it is <code>mk</code> by
+default), and <code>red</code>, <code>green</code>, <code>blue</code>, and <code>name</code> project the four
+values that are used to construct an element of <code>color</code>.
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-35' mode="ace/mode/lean" readonly="true">def purple := color.mk 150 0 150 "purple"
+
+#eval color.red purple
+#eval color.green purple
+#eval color.blue purple
+#eval color.name purple</juicy-ace-editor><div id='lean-full-code-35' style='display:none'>structure color : Type :=
+mk :: (red : ℕ) (green : ℕ) (blue : ℕ) (name : string)
+
+def purple := color.mk 150 0 150 "purple"
+
+#eval color.red purple
+#eval color.green purple
+#eval color.blue purple
+#eval color.name purple
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-35').text());">Try it yourself &raquo;</button></div>
+</div>
+
+<p>
+Because records are so important, Lean provides useful notation for
+dealing with them. For example, when the type of the record can be
+inferred, Lean allows the use of <i>anonymous constructors</i> <code>⟨</code> &#x2026; <code>⟩</code>,
+entered as <code>\&lt;</code> and <code>\&gt;</code>, or the ascii equivalents <code>(|</code> and
+<code>|)</code>. Similarly, one can use the notation <code>.1</code>, <code>.2</code>, and so on for
+the projections.
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-36' mode="ace/mode/lean" readonly="true">def purple : color := ⟨150, 0, 150, "purple"⟩
+
+#eval purple.1
+#eval purple.2
+#eval purple.3
+#eval purple.4</juicy-ace-editor><div id='lean-full-code-36' style='display:none'>structure color : Type :=
+mk :: (red : ℕ) (green : ℕ) (blue : ℕ) (name : string)
+
+def purple : color := ⟨150, 0, 150, "purple"⟩
+
+#eval purple.1
+#eval purple.2
+#eval purple.3
+#eval purple.4
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-36').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+Alternatively, one can use the notation <code>.</code> to extract the relevant
+projections:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-37' mode="ace/mode/lean" readonly="true">#eval purple.red
+#eval purple.green
+#eval purple.blue
+#eval purple.name</juicy-ace-editor><div id='lean-full-code-37' style='display:none'>structure color : Type :=
+mk :: (red : ℕ) (green : ℕ) (blue : ℕ) (name : string)
+
+def purple : color := ⟨150, 0, 150, "purple"⟩
+
+#eval purple.red
+#eval purple.green
+#eval purple.blue
+#eval purple.name
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-37').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+When the type of the record can be inferred, you can also use the
+following notation to build an instance, explicitly naming each
+component:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-38' mode="ace/mode/lean" readonly="true">def purple : color :=
+{ red := 150, blue := 0, green := 150, name := "purple" }</juicy-ace-editor><div id='lean-full-code-38' style='display:none'>structure color : Type :=
+mk :: (red : ℕ) (green : ℕ) (blue : ℕ) (name : string)
+
+def purple : color :=
+{ red := 150, blue := 0, green := 150, name := "purple" }
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-38').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+You can also use the <code>with</code> keyword for <i>record update</i>, that is, to
+define an instance of a new record by modifying an existing one:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-39' mode="ace/mode/lean" readonly="true">def mauve := { purple with green := 100, name := "mauve" }
+
+#eval mauve.red
+#eval mauve.green</juicy-ace-editor><div id='lean-full-code-39' style='display:none'>structure color : Type :=
+mk :: (red : ℕ) (green : ℕ) (blue : ℕ) (name : string)
+
+def purple : color :=
+{ red := 150, blue := 0, green := 150, name := "purple" }
+
+def mauve := { purple with green := 100, name := "mauve" }
+
+#eval mauve.red
+#eval mauve.green
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-39').text());">Try it yourself &raquo;</button></div>
+</div>
+
+<p>
+Lean provides extensive support for reasoning generically about
+algebraic structures, in particular, allowing the inheritance and
+sharing of notation and facts. Chief among these is the use of <i>class
+inference</i>, in a manner similar to that used by functional programming
+languages like Haskell. For example, the Lean library declares the
+structures <code>has_one</code> and <code>has_mul</code> to support the generic notation <code>1</code>
+and <code>*</code> in structures which have a one and binary multiplication:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-40' mode="ace/mode/lean" readonly="true">universe u
+variables {α : Type u}
+
+class has_one (α : Type u) := (one : α)
+class has_mul (α : Type u) := (mul : α → α → α)</juicy-ace-editor><div id='lean-full-code-40' style='display:none'>namespace hide
+
+universe u
+variables {α : Type u}
+
+class has_one (α : Type u) := (one : α)
+class has_mul (α : Type u) := (mul : α → α → α)
+
+end hide
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-40').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+The <code>class</code> command not only defines a structure (in the cases above,
+each storing only one piece of data), but also marks them as targets
+for <i>class inference</i>. The symbol <code>*</code> is notation for the identifier
+<code>has_mul.mul</code>, and if you check the type of <code>has_mul.mul</code>, you will see there is an
+implicit argument for an element of <code>has_mul</code>:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-41' mode="ace/mode/lean" readonly="true">#check @has_mul.mul
+</juicy-ace-editor><div id='lean-full-code-41' style='display:none'>#check @has_mul.mul
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-41').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+The sole element of the <code>has_mul</code> structure is the relevant
+multiplication, which should be inferred from the
+type <code>α</code> of the arguments. Given an expression <code>a * b</code> where <code>a</code> and
+<code>b</code> have type <code>α</code>, Lean searches through instances of <code>has_mul</code> that
+have been declared to the system, in search of one that matches the
+type <code>α</code>. When it finds such an instance, it uses that as the argument
+to <code>mul</code>.
+</p>
+
+<p>
+With <code>has_mul</code> and <code>has_one</code> in place, some of the most basic objects
+of the algebraic hierarchy are defined as follows:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-42' mode="ace/mode/lean" readonly="true">universe u
+variables {α : Type u}
+
+class semigroup (α : Type u) extends has_mul α :=
+(mul_assoc : ∀ a b c : α, a * b * c = a * (b * c))
+
+class comm_semigroup (α : Type u) extends semigroup α :=
+(mul_comm : ∀ a b : α, a * b = b * a)
+
+class monoid (α : Type u) extends semigroup α, has_one α :=
+(one_mul : ∀ a : α, 1 * a = a) (mul_one : ∀ a : α, a * 1 = a)</juicy-ace-editor><div id='lean-full-code-42' style='display:none'>namespace hide
+
+universe u
+variables {α : Type u}
+
+class semigroup (α : Type u) extends has_mul α :=
+(mul_assoc : ∀ a b c : α, a * b * c = a * (b * c))
+
+class comm_semigroup (α : Type u) extends semigroup α :=
+(mul_comm : ∀ a b : α, a * b = b * a)
+
+class monoid (α : Type u) extends semigroup α, has_one α :=
+(one_mul : ∀ a : α, 1 * a = a) (mul_one : ∀ a : α, a * 1 = a)
+
+end hide
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-42').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+There are a few things to note here. First, these definitions are
+introduced as <code>class</code> definitions also. This marks them as eligible for
+class inference, enabling Lean to find the <code>semigroup</code>,
+<code>comm_semigroup</code>, or <code>monoid</code> structure associated to a type, <code>α</code>,
+when necessary. The <code>extends</code> keyword does two things: it defines the
+new structure by adding the given fields to those of the structures
+being extended, and it declares any instance of the new structure to
+be an instance of the previous ones. Finally, notice that the
+new elements of these structures are not data, but, rather,
+<i>properties</i> that the data is assumed to satisfy. It is a consequence
+of the encoding of propositions and proofs in dependent type theory
+that we can treat assumptions like associativity and commutativity in
+a manner similar to data. We will discuss this encoding in a later
+chapter.
+</p>
+
+<p>
+Because any monoid is an instance of <code>has_one</code> and <code>has_mul</code>, Lean can
+interpret <code>1</code> and <code>*</code> in any monoid.
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-43' mode="ace/mode/lean" readonly="true">variables (M : Type) [monoid M]
+variables a b : M
+
+#check a * 1 * b
+</juicy-ace-editor><div id='lean-full-code-43' style='display:none'>variables (M : Type) [monoid M]
+variables a b : M
+
+#check a * 1 * b
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-43').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+The declaration <code>[monoid M]</code> declares a variable ranging over the
+monoid structure, but leaves it anonymous. The variable is
+automatically inserted in any definition that depends on <code>M</code>, and is
+marked for class inference. We can now define operations
+generically. For example, the notion of squaring an element makes
+sense in any structure with a multiplication.
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-44' mode="ace/mode/lean" readonly="true">universe u
+def square {α : Type u} [has_mul α] (x : α) : α := x * x
+</juicy-ace-editor><div id='lean-full-code-44' style='display:none'>universe u
+def square {α : Type u} [has_mul α] (x : α) : α := x * x
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-44').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+Because <code>monoid</code> is an instance of <code>has_mul</code>, we can then use the
+generic squaring operation in any monoid.
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-45' mode="ace/mode/lean" readonly="true">variables (M : Type) [monoid M]
+variables a b : M
+
+#check square a * square b</juicy-ace-editor><div id='lean-full-code-45' style='display:none'>universe u
+def square {α : Type u} [has_mul α] (x : α) : α := x * x
+
+variables (M : Type) [monoid M]
+variables a b : M
+
+#check square a * square b
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-45').text());">Try it yourself &raquo;</button></div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org0b6f83f" class="outline-3">
+<h3 id="Nonconstructive_Definitions"><a id="org0b6f83f"></a><span class="section-number-3"> 2.5</span> Nonconstructive Definitions</h3>
+<div class="outline-text-3" id="text-Nonconstructive_Definitions">
+<p>
+Lean allows us to to define nonconstructive functions using familiar
+classical principles, provided we mark the associated definitions as
+<code>noncomputable</code>.
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-46' mode="ace/mode/lean" readonly="true">open classical
+local attribute [instance] prop_decidable
+
+noncomputable def choose (p : ℕ → Prop) : ℕ :=
+if h : (∃ n : ℕ, p n) then some h else 0
+
+noncomputable def inverse (f : ℕ → ℕ) (n : ℕ) : ℕ :=
+if h : (∃ m : ℕ, f m = n) then some h else 0
+</juicy-ace-editor><div id='lean-full-code-46' style='display:none'>open classical
+local attribute [instance] prop_decidable
+
+noncomputable def choose (p : ℕ → Prop) : ℕ :=
+if h : (∃ n : ℕ, p n) then some h else 0
+
+noncomputable def inverse (f : ℕ → ℕ) (n : ℕ) : ℕ :=
+if h : (∃ m : ℕ, f m = n) then some h else 0
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-46').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+In this example, declaring the type class instance <code>prop_decidable</code>
+allows us to use a classical definition by cases, depending on whether
+an arbitrary proposition is true or false. Given an arbitrary
+predicate <code>p</code> on the natural numbers, <code>choose p</code> returns an <code>n</code>
+satisfying <code>p n</code> if there is one, and <code>0</code> otherwise. For example, <code>p
+n</code> may assert that <code>n</code> codes a halting computation sequence for some
+Turing machine, on a given input. In that case, <code>choose p</code> magically
+decides whether or not such a computation exists, and returns one if
+it doesn't. The second definition makes a best effort to define an
+inverse to a function <code>f</code> from the natural numbers to the natural
+numbers, mapping each <code>n</code> to some <code>m</code> such that <code>f m = n</code>, and zero
+otherwise.
+</p>
+
+<p>
+The two previous definitions make use of the <code>some</code> function, which in
+turn depends on a construct known as <i>Hilbert's epsilon</i>. The next two
+definitions have essentially the same effect, although they do not
+specify the default value in case the given condition fails:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-47' mode="ace/mode/lean" readonly="true">open classical
+local attribute [instance] prop_decidable
+
+noncomputable def choose (p : ℕ → Prop) : ℕ :=
+epsilon p
+
+noncomputable def inverse (f : ℕ → ℕ) (n : ℕ) : ℕ :=
+epsilon (λ m, f m = n)
+</juicy-ace-editor><div id='lean-full-code-47' style='display:none'>open classical
+local attribute [instance] prop_decidable
+
+noncomputable def choose (p : ℕ → Prop) : ℕ :=
+epsilon p
+
+noncomputable def inverse (f : ℕ → ℕ) (n : ℕ) : ℕ :=
+epsilon (λ m, f m = n)
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-47').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+These definitions rely on the fact that Lean can infer (again using
+type class inference) that the natural numbers are nonempty. The
+<code>epsilon</code> operator is, in turn, defined from an even more fundamental
+choice principle, which is the source of all nonconstructive
+definitions in the standard library. The dependence is made
+manifest by the <code>#print axioms</code> command.
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-48' mode="ace/mode/lean" readonly="true">#print axioms choose
+#print axioms inverse</juicy-ace-editor><div id='lean-full-code-48' style='display:none'>open classical
+local attribute [instance] prop_decidable
+
+noncomputable def choose (p : ℕ → Prop) : ℕ :=
+epsilon p
+
+noncomputable def inverse (f : ℕ → ℕ) (n : ℕ) : ℕ :=
+epsilon (λ m, f m = n)
+
+#print axioms choose
+#print axioms inverse
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-48').text());">Try it yourself &raquo;</button></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</body>
+</html>

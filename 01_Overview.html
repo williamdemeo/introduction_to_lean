@@ -1,0 +1,675 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2017-09-10 Sun 21:46 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>An Introduction to Lean</title>
+<meta name="generator" content="Org mode" />
+<meta name="author" content="[[http://www.andrew.cmu.edu/user/avigad][Jeremy Avigad]]Jeremy Avigad, [[http://leodemoura.github.io][Leonardo de Moura]]Leonardo de Moura, [[https://gebner.org/][Gabriel Ebner]]Gabriel Ebner, and Sebastian Ullrich" />
+<link rel="stylesheet" href="css/tutorial.css"/>
+<link rel="stylesheet" href="css/code.css"/>
+<script type="text/javascript" charset="utf-8">if(!window.PolymerGestures) { var head = document.getElementsByTagName('head')[0]; var js = document.createElement("script"); js.type = "text/javascript"; js.src = "//cdn.jsdelivr.net/webcomponentsjs/0.7.20/webcomponents.min.js"; head.appendChild(js); } </script>
+<link rel='import' href='juicy-ace-editor.html'/>
+</head>
+<body>
+<div id="content">
+<h1 class="title">An Introduction to Lean</h1>
+
+<div id="outline-container-org3e20c4d" class="outline-2">
+<h2 id="Overview"><a id="org3e20c4d"></a><span class="section-number-2"> 1</span> Overview</h2>
+<div class="outline-text-2" id="text-Overview">
+<p>
+This introduction offers a tour of Lean and its features,
+with a number of examples for you to play around with and explore. If
+you are reading this in our online tutorial system, you can run
+examples like the one below by clicking the button that says "try it
+yourself."
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-1' mode="ace/mode/lean" readonly="true">#check "hello world!"
+</juicy-ace-editor><div id='lean-full-code-1' style='display:none'>#check "hello world!"
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-1').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+The response from Lean appears in the small window underneath the
+editor text, and also in popup windows that you can read when you
+hover over the indicators in the left margin. Alternatively, if you
+have installed Lean and have it running in a stand-alone editor, you
+can copy and paste examples and try them there.
+</p>
+</div>
+
+<div id="outline-container-org9a49f0c" class="outline-3">
+<h3 id="org9a49f0c"><span class="section-number-3"> 1.1</span> Perspectives on Lean</h3>
+<div class="outline-text-3" id="text-1-1">
+<p>
+Lean is an implementation of a logical foundation known as <i>dependent
+type theory</i>. Specifically, it implements a version of dependent type
+theory known as the <i>Calculus of Inductive Constructions</i>. The <i>CIC</i>
+is a formal language with a small and precise set of rules that
+governs the formation of expressions. In this formal system, moreover,
+every expression has a <i>type</i>. The type of expression indicates what
+sort of object the expression denotes. For example, an expression may
+denote a mathematical object like a natural number, a data type, an
+assertion, or a proof.
+</p>
+
+<p>
+Lean has a small and carefully written kernel, which serves to check
+that an expression is well-formed and confirm that it has a given
+type. It is this kernel that gives Lean its special character.
+Dependent type theory serves as a foundational language, allowing us
+to describe all sorts of objects and prove things about them. The
+foundational language fixes the meaning of the objects we introduce,
+and the kernel ensures that the things we prove about them are
+correct.
+</p>
+
+<p>
+Put simply, Lean is designed to help you construct, manipulate, and
+check expressions in this foundational language. This may not sound
+like much, but what makes the system powerful is the fact that
+dependent type theory is expressive enough to allow us to define and
+reason about all sorts of objects. For example, Lean's standard
+library defines the natural numbers to be the structure generated
+freely and inductively by a constant, <i>zero</i>, and a unary function
+<i>succ</i>:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-2' mode="ace/mode/lean" readonly="true">inductive nat : Type
+| zero : nat
+| succ : nat → nat</juicy-ace-editor><div id='lean-full-code-2' style='display:none'>namespace hide
+
+inductive nat : Type
+| zero : nat
+| succ : nat → nat
+
+end hide
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-2').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+If you copy this definition into the editor window at right you will
+see that we have wrapped it in a <i>namespace</i> to avoid conflicting with
+the standard definition, which is loaded by default. Even so, choosing
+the name <code>nat</code> means that within the namespace this identifier is
+overloaded, which can cause confusion. Thus we will do this only
+sparingly, for purposes of illustration.
+</p>
+
+<p>
+Having specified this data type, we can go on to define addition by
+recursion on the second argument:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-3' mode="ace/mode/lean" readonly="true">def add : nat → nat → nat
+| m nat.zero     := m
+| m (nat.succ n) := nat.succ (add m n)</juicy-ace-editor><div id='lean-full-code-3' style='display:none'>namespace hide
+
+inductive nat : Type
+| zero : nat
+| succ : nat → nat
+
+def add : nat → nat → nat
+| m nat.zero     := m
+| m (nat.succ n) := nat.succ (add m n)
+
+end hide
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-3').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+Lean compiles definitions like these down to a single axiomatic
+primitive that governs use of both induction and recursion on
+inductively defined structures. The library defines notation for the
+data type, as well as for <code>zero</code> and <code>add</code>. (In fact, Lean uses <i>type
+classes</i>, a very handy mechanism used by functional programming
+languages like Haskell, to share notation and properties across
+algebraic structures.) Lean uses the Unicode character <code>ℕ</code> as alternative
+notation for the type <code>nat</code>. You can enter this in an editor by
+writing <code>\nat</code>.
+</p>
+
+<p>
+Of course, we can also define non-recursive functions by giving an
+explicit definition:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-4' mode="ace/mode/lean" readonly="true">def double (n : ℕ) : ℕ := n + n
+</juicy-ace-editor><div id='lean-full-code-4' style='display:none'>def double (n : ℕ) : ℕ := n + n
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-4').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+We can then go on to define other data types like the integers, the
+rationals, and the real numbers, the booleans, characters and strings,
+lists, products, disjoint sums, and so on. We can also define
+algebraic structures like groups, rings, fields, vector spaces, and
+categories. In fact, dependent type theory was designed to serve as a
+foundation for all conventional mathematics.
+</p>
+
+<p>
+This points to a first intended use of Lean: it serves as a
+<i>specification language</i>, that is, a means to specify and define
+mathematical objects in precise terms. With these specifications, Lean
+can interpret basic objects and infer their types:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-5' mode="ace/mode/lean" readonly="true">#check (27 + 9) * 33
+#check [(1, 2), (3, 4), (5, 6)] ++ [(7, 8), (9, 10)]
+</juicy-ace-editor><div id='lean-full-code-5' style='display:none'>#check (27 + 9) * 33
+#check [(1, 2), (3, 4), (5, 6)] ++ [(7, 8), (9, 10)]
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-5').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+When there is no other information present to constrain the type of a
+numeral, Lean assumes it denotes a natural, by default. Thus Lean can
+recognize that the first expression denotes a natural number, and that
+the second, a concatenation of two lists of pairs of natural numbers,
+is again a list of pairs. It also remembers that <code>double</code> is a
+function from the natural numbers to the natural numbers, and can
+print out the definition when requested to do so:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-6' mode="ace/mode/lean" readonly="true">#check double
+#print double</juicy-ace-editor><div id='lean-full-code-6' style='display:none'>def double (n : ℕ) : ℕ := n + n
+
+#check double
+#print double
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-6').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+Lean can reason about abstract objects as well as it can reason about
+concrete ones. In the following example, we declare a type <code>G</code> with a
+group structure, and variables <code>g₁</code> and <code>g₂</code> that range over <code>G</code>. With
+those declarations, Lean knows that the expression <code>g₂⁻¹ * g₁ * g₂</code>
+denotes an element of <code>G</code>.
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-7' mode="ace/mode/lean" readonly="true">section
+  variables (G : Type) [group G]
+  variables g₁ g₂ : G
+
+  #check g₂⁻¹ * g₁ * g₂
+end
+</juicy-ace-editor><div id='lean-full-code-7' style='display:none'>section
+  variables (G : Type) [group G]
+  variables g₁ g₂ : G
+
+  #check g₂⁻¹ * g₁ * g₂
+end
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-7').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+Putting the declarations in a <code>section</code>, as we do here, delimits their
+scope. In this case, the section declaration is not needed, and no
+harm would be done if we had declared these variables at the top
+level.
+</p>
+
+<p>
+An important feature of dependent type theory is that every expression
+has a computational interpretation, which is to say, there are rules
+that specify how they can be <i>reduced</i> to a normal form. Moreover,
+expressions in a computationally pure fragment of the language
+evaluate to <i>values</i> in the way you would expect. For example,
+assuming the definition does not depend on nonconstructive components
+in an essential way, every closed term of type <code>ℕ</code> evaluates to a
+numeral. Lean's kernel can carry out this evaluation:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-8' mode="ace/mode/lean" readonly="true">#eval (27 + 9) * 33
+</juicy-ace-editor><div id='lean-full-code-8' style='display:none'>#eval (27 + 9) * 33
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-8').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+As part of the kernel, the results of this evaluation can be highly
+trusted. The evaluator is not very efficient, however, and is not
+intended to be used for substantial computational tasks. For that
+purpose, Lean also generates bytecode for every definition of a
+computable object, and can evaluate it on demand. To process the
+bytecode quickly, it uses an efficient <i>virtual machine</i>, similar to
+the ones used to interpret OCaml and Python.
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-9' mode="ace/mode/lean" readonly="true">#eval (27 + 9) * 33
+#eval (2227 + 9999) * 33
+#eval double 9999
+#eval [(1, 2), (3, 4), (5, 6)] ++ [(7, 8), (9, 10)]</juicy-ace-editor><div id='lean-full-code-9' style='display:none'>def double (n : ℕ) : ℕ := n + n
+
+#eval (27 + 9) * 33
+#eval (2227 + 9999) * 33
+#eval double 9999
+#eval [(1, 2), (3, 4), (5, 6)] ++ [(7, 8), (9, 10)]
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-9').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+Relying on results from the bytecode evaluator requires a higher level
+of trust than relying on the kernel. For example, for efficiency, the
+bytecode evaluator uses the GNU multiple precision library to carry out
+numerical computations involving the natural numbers and integers, so
+the correctness of those computations are no longer underwritten by
+the axiomatic foundation.
+</p>
+
+<p>
+This points to a second intended use of Lean, namely, as a
+<i>programming language</i>. Because dependent type theory is so
+expressive, we can make use of all the usual methods and techniques of
+functional programming, including higher types, type classes, records,
+monads, and other abstractions. In fact, we have the entire Lean
+library at our disposal. With just a few lines of code, we can write a
+generic sort procedure that sorts elements of a list according to a
+specified binary relation <code>r</code> on an arbitrary type <code>α</code>, assuming only
+that we can determine computationally when <code>r</code> holds.
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-10' mode="ace/mode/lean" readonly="true">section sort
+universe u
+parameters {α : Type u} (r : α → α → Prop) [decidable_rel r]
+local infix `≼` : 50 := r
+
+def ordered_insert (a : α) : list α → list α
+| []       := [a]
+| (b :: l) := if a ≼ b then a :: (b :: l) else b :: ordered_insert l
+
+def insertion_sort : list α → list α
+| []       := []
+| (b :: l) := ordered_insert b (insertion_sort l)
+
+end sort
+</juicy-ace-editor><div id='lean-full-code-10' style='display:none'>section sort
+universe u
+parameters {α : Type u} (r : α → α → Prop) [decidable_rel r]
+local infix `≼` : 50 := r
+
+def ordered_insert (a : α) : list α → list α
+| []       := [a]
+| (b :: l) := if a ≼ b then a :: (b :: l) else b :: ordered_insert l
+
+def insertion_sort : list α → list α
+| []       := []
+| (b :: l) := ordered_insert b (insertion_sort l)
+
+end sort
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-10').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+For foundational reasons, types in Lean have to be stratified into a
+hierarchy of <i>type universes</i>, and the definitions above work for any
+type <code>α</code> in any such universe. We can run the procedure above on a
+list of natural numbers, using the usual ordering:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-11' mode="ace/mode/lean" readonly="true">#eval insertion_sort (λ m n : ℕ, m ≤ n) [5, 27, 221, 95, 17, 43, 7, 2, 98, 567, 23, 12]</juicy-ace-editor><div id='lean-full-code-11' style='display:none'>section sort
+universe u
+parameters {α : Type u} (r : α → α → Prop) [decidable_rel r]
+local infix `≼` : 50 := r
+
+def ordered_insert (a : α) : list α → list α
+| []       := [a]
+| (b :: l) := if a ≼ b then a :: (b :: l) else b :: ordered_insert l
+
+def insertion_sort : list α → list α
+| []       := []
+| (b :: l) := ordered_insert b (insertion_sort l)
+
+end sort
+
+#eval insertion_sort (λ m n : ℕ, m ≤ n) [5, 27, 221, 95, 17, 43, 7, 2, 98, 567, 23, 12]
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-11').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+Substantial programs can be written in Lean and run by the bytecode
+interpreter. In fact, a full-blown <a target='_blank' href="https://github.com/leanprover/super">resolution theorem prover</a> for Lean
+has been written in Lean itself.
+</p>
+
+<p>
+You can profile your code by setting the relevant options:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-12' mode="ace/mode/lean" readonly="true">set_option profiler true
+set_option profiler.freq 10
+</juicy-ace-editor><div id='lean-full-code-12' style='display:none'>set_option profiler true
+set_option profiler.freq 10
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-12').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+The second option determines the frequency that the virtual machine is
+polled with. Be careful: if the task you profile is too short, there won't
+be any output! You can even implement your own <a target='_blank' href="https://github.com/leanprover/lean/tree/master/library/tools/debugger">debugger</a> in Lean
+itself.
+</p>
+
+<p>
+What makes Lean special as a programming language is that the programs
+we write define functions in a precise axiomatic framework. Which
+brings us to third, and central, intended use of Lean: namely we can
+make assertions about the objects we define and then go on to prove
+those assertions. We can do this because the language of dependent
+type theory is rich enough to encode such assertions and proofs. For
+example, we can express the property that a natural number is even:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-13' mode="ace/mode/lean" readonly="true">def even (n : ℕ) : Prop := ∃ m, n = 2 * m
+</juicy-ace-editor><div id='lean-full-code-13' style='display:none'>def even (n : ℕ) : Prop := ∃ m, n = 2 * m
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-13').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+As presented, it is not clear that the property of being even is
+decidable, since we cannot in general test every natural number to
+determine whether any of them serves as a witness to the given
+existential statement. But we can nonetheless use this definition to
+form compound statements:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-14' mode="ace/mode/lean" readonly="true">#check even 10
+#check even 11
+#check ∀ n, even n ∨ even (n + 1)
+#check ∀ n m, even n → even m → even (n + m)</juicy-ace-editor><div id='lean-full-code-14' style='display:none'>def even (n : ℕ) : Prop := ∃ m, n = 2 * m
+
+#check even 10
+#check even 11
+#check ∀ n, even n ∨ even (n + 1)
+#check ∀ n m, even n → even m → even (n + m)
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-14').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+In each case, the expression has type <code>Prop</code>, indicating that Lean
+recognizes it as an assertion.
+</p>
+
+<p>
+Incidentally, of course, we do know that the property of being <code>even
+n</code> is algorithmically decidable. We can develop any algorithm we want
+for that purpose. Provided we can prove that it behaves as advertised,
+we can then use Lean's type class mechanism to associate this decision
+procedure to the predicate. Once we do so, we can use the predicate
+<code>even</code> in conditional statements in any program.
+</p>
+
+<p>
+In any case, in order to <i>prove</i> assertions like the ones above (at
+least, the ones that are true), we need a proof language. Fortunately,
+dependent type theory can play that role: proofs are nothing more than
+certain kinds of expressions in the formal language. In the encoding
+used, if <code>p</code> is any proposition, a proof of <code>p</code> is just an expression
+<code>e</code> of type <code>p</code>. Thus, in Lean, checking a proof is just a special
+case of checking that an expression is well-formed and has a given
+type. We can prove that 10 is even as follows:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-15' mode="ace/mode/lean" readonly="true">example : even 10 := ⟨5, rfl⟩</juicy-ace-editor><div id='lean-full-code-15' style='display:none'>def even (n : ℕ) : Prop := ∃ m, n = 2 * m
+
+example : even 10 := ⟨5, rfl⟩
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-15').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+In general, to prove an existential statement, it is enough to present
+a witness to the existential quantifier and then show that the
+subsequent claim is true of that witness. The Unicode angle brackets
+just package this data together; you can enter them in an editor with
+<code>\&lt;</code> and <code>\&gt;</code>, or use the ASCII equivalents <code>(|</code> and <code>|)</code>. The second
+component, <code>rfl</code>, is short for reflexivity. Lean's kernel can verify
+that <code>10 = 2 * 5</code> by reducing both sides and confirming that they are,
+in fact, identical. (For longer expressions, Lean's simplifier, which
+will be discussed below, can do this more efficiently, producing a
+proof instead that carries out the calculation using binary
+representations.)
+</p>
+
+<p>
+As noted above, dependent type theory is designed to serve as a
+mathematical foundation, so that any conventional mathematical
+assertion can be reasonably expressed, and any theorem that can be
+proved using conventional mathematical means can be carried out
+formally, with enough effort. Here is a proof that the sum of two even
+numbers is even:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-16' mode="ace/mode/lean" readonly="true">theorem even_add : ∀ m n, even m → even n → even (n + m) :=
+take m n,
+assume ⟨k, (hk : m = 2 * k)⟩,
+assume ⟨l, (hl : n = 2 * l)⟩,
+have n + m = 2 * (k + l),
+  by simp [hk, hl, mul_add],
+show even (n + m),
+  from ⟨_, this⟩</juicy-ace-editor><div id='lean-full-code-16' style='display:none'>def even (n : ℕ) : Prop := ∃ m, n = 2 * m
+
+theorem even_add : ∀ m n, even m → even n → even (n + m) :=
+take m n,
+assume ⟨k, (hk : m = 2 * k)⟩,
+assume ⟨l, (hl : n = 2 * l)⟩,
+have n + m = 2 * (k + l),
+  by simp [hk, hl, mul_add],
+show even (n + m),
+  from ⟨_, this⟩
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-16').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+Again, we emphasize that the proof is really just an expression in
+dependent type theory, presented with syntactic sugar that makes it
+look somewhat like any informal mathematical proof. There is also a
+tiny bit of automated reasoning thrown in: the command <code>by simp</code> calls
+on Lean's built-in simplifier to prove the assertion after the <code>have</code>,
+using the two facts labelled <code>hk</code> and <code>hl</code>, and the distributivity of
+multiplication over addition.
+</p>
+
+<p>
+Lean supports another style of writing proofs, namely, using
+<i>tactics</i>. These are instructions, or procedures, that tell Lean how
+to construct the requisite expression. Here is a tactic-style proof of
+the theorem above:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-17' mode="ace/mode/lean" readonly="true">theorem even_add : ∀ m n, even m → even n → even (n + m) :=
+begin
+  intros m n hm hn,
+  cases hm with k hk,
+  cases hn with l hl,
+  unfold even,
+  existsi (k + l),
+  simp [hk, hl, mul_add]
+end</juicy-ace-editor><div id='lean-full-code-17' style='display:none'>def even (n : ℕ) : Prop := ∃ m, n = 2 * m
+
+theorem even_add : ∀ m n, even m → even n → even (n + m) :=
+begin
+  intros m n hm hn,
+  cases hm with k hk,
+  cases hn with l hl,
+  unfold even,
+  existsi (k + l),
+  simp [hk, hl, mul_add]
+end
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-17').text());">Try it yourself &raquo;</button></div>
+</div>
+
+<p>
+Just as we can prove statements about the natural numbers, we can also
+reason about computer programs written in Lean, because these, too,
+are no different from any other definitions. This enables us to specify
+properties of computer programs, prove that the programs meet their
+specifications, and run the code with confidence that the results mean
+what we think they mean.
+</p>
+
+<p>
+The use of <code>simp</code> in the proof above points to another aspect of Lean,
+namely, that it can serve as a gateway to the use of automated
+reasoning. Terms in dependent type theory can be very verbose, and
+formal proofs can be especially long. One of Lean's strengths is that
+it can help you construct these terms, and hide the details from
+you. We have already seen hints of this: in the examples above, Lean
+inferred the fact that the natural numbers form an instance of
+a semiring in order to make use of the theorem <code>mul_add</code>, it found a
+procedure for comparing two natural numbers when we applied
+<code>insertion_sort</code> with the less-than ordering, and it did some work
+behind the scenes (though in this case, not much) when transforming
+the recursive specification of addition on the natural numbers to a
+formal definition. But a central goal of the Lean project is to
+develop powerful automation that will assist in the verification of
+programs and the construction of proofs as well.
+</p>
+
+<p>
+It is the tactic framework that serves as a gateway to the use of
+automation. Lean provides means of implementing automated reasoning
+procedures in such a way that they produce formal proofs that their
+results are correct. This imposes an extra burden on the
+implementation, but it comes with benefits as well: automated
+procedures can make full use of the Lean library and API, and the
+formal justifications they produce provide a strong guarantee that the
+results are indeed correct.
+</p>
+
+<p>
+Which brings us to yet another aspect of Lean, namely, its role as a
+<i>metaprogramming language</i>. Many of Lean's internal data structures
+and procedures are exposed and available within the language of Lean
+itself, via a monadic interface. We refer to the use of these
+procedures as "metaprogramming" because they take us outside the formal
+framework: the access points to the API are declared as constants, and
+the formal framework knows nothing about them, other than their
+type. Lean keeps track of which objects in the environment are part of
+the trusted kernel and which make use of this special API, and
+requires us to annotate the latter definitions with the special
+keyword <code>meta</code>. The virtual machine, however, handles calls to the API
+appropriately. This makes it possible to write Lean tactics in Lean
+itself.
+</p>
+
+<p>
+For example, the procedure <code>contra_aux</code> searches through two lists of
+expressions, assumed to be hypotheses available in the context of a
+tactic proof, in search of a pair of the form <code>h₁ : p</code> and <code>h₂ : ¬
+p</code>. When it finds such a pair, it uses it to produce a proof of the
+resulting theorem. The procedure <code>contra</code> then applies <code>contra_aux</code> to
+the hypotheses in the local context.
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-18' mode="ace/mode/lean" readonly="true">open expr tactic
+
+private meta def contra_aux : list expr → list expr → tactic unit
+| []         hs := failed
+| (h₁ :: rs) hs :=
+  do t₀ ← infer_type h₁,
+     t  ← whnf t₀,
+     (do a ← match_not t,
+         h₂ ← find_same_type a hs,
+         tgt ← target,
+         pr ← mk_app `absurd [tgt, h₂, h₁],
+         exact pr)
+     &lt;|&gt; contra_aux rs hs
+
+meta def contra : tactic unit :=
+do ctx ← local_context,
+   contra_aux ctx ctx
+</juicy-ace-editor><div id='lean-full-code-18' style='display:none'>open expr tactic
+
+private meta def contra_aux : list expr → list expr → tactic unit
+| []         hs := failed
+| (h₁ :: rs) hs :=
+  do t₀ ← infer_type h₁,
+     t  ← whnf t₀,
+     (do a ← match_not t,
+         h₂ ← find_same_type a hs,
+         tgt ← target,
+         pr ← mk_app `absurd [tgt, h₂, h₁],
+         exact pr)
+     &lt;|&gt; contra_aux rs hs
+
+meta def contra : tactic unit :=
+do ctx ← local_context,
+   contra_aux ctx ctx
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-18').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+Having defined this procedure, we can then use it to prove theorems:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-19' mode="ace/mode/lean" readonly="true">example (p q r : Prop) (h₁ : p ∧ q) (h₂ : q → r) (h₃ : ¬ (p ∧ q)) : r :=
+by contra</juicy-ace-editor><div id='lean-full-code-19' style='display:none'>open expr tactic
+
+private meta def contra_aux : list expr → list expr → tactic unit
+| []         hs := failed
+| (h₁ :: rs) hs :=
+  do t₀ ← infer_type h₁,
+     t  ← whnf t₀,
+     (do a ← match_not t,
+         h₂ ← find_same_type a hs,
+         tgt ← target,
+         pr ← mk_app `absurd [tgt, h₂, h₁],
+         exact pr)
+     &lt;|&gt; contra_aux rs hs
+
+meta def contra : tactic unit :=
+do ctx ← local_context,
+   contra_aux ctx ctx
+
+example (p q r : Prop) (h₁ : p ∧ q) (h₂ : q → r) (h₃ : ¬ (p ∧ q)) : r :=
+by contra
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-19').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+The results of such a tactic are always checked by the Lean kernel, so
+they can be trusted, even if the code itself is buggy. If the kernel
+fails to type check the resulting term, it raises an error, and the
+resulting theorem is not added to the environment.
+</p>
+
+<p>
+Substantial tactics can be written in such a way, even, as noted
+above, a full-blown resolution theorem prover. Indeed, many of Lean's
+core tactics <i>are</i> implemented in Lean itself. The code from <code>contra</code>
+above is, in fact, part of the <code>contradiction</code> tactic that is part of
+Lean's standard library. Thus Lean offers a language for
+expressing not just mathematical knowledge, construed as a body of
+definitions and theorems, but also other kinds of mathematical
+expertise, namely the algorithms, procedures, and heuristics that are
+part and parcel of mathematical understanding.
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgdf9182c" class="outline-3">
+<h3 id="orgdf9182c"><span class="section-number-3"> 1.2</span> Where To Go From Here</h3>
+<div class="outline-text-3" id="text-1-2">
+<p>
+We have surveyed a number of ways that Lean can be used, namely, as
+</p>
+<ul class="org-ul">
+<li>a specification language</li>
+<li>a programming language</li>
+<li>an assertion language</li>
+<li>a proof language</li>
+<li>a gateway to using automation with fully verified results, and</li>
+<li>a metaprogramming language.</li>
+</ul>
+<p>
+Subsequent chapters provide a compendium of examples for you to play
+with and enjoy. These chapters are fairly short on explanation,
+however, and are not meant to serve as definitive references. If you
+are motivated to continue using Lean in earnest, we recommend
+continuing, from here, to either of the following more expansive
+introductions:
+</p>
+
+<ul class="org-ul">
+<li><a target='_blank' href="https://leanprover.github.io/theorem_proving_in_lean">Theorem Proving in Lean</a></li>
+<li><a target='_blank' href="https://leanprover.github.io/programming_in_lean/">Programming in Lean</a></li>
+</ul>
+
+<p>
+The first focuses on the use of Lean as a theorem prover, whereas
+the second focuses on aspects of Lean related to programming and
+metaprogramming.
+</p>
+</div>
+</div>
+</div>
+</div>
+</body>
+</html>

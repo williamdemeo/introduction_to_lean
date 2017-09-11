@@ -1,0 +1,780 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2017-07-24 Mon 23:41 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>An Introduction to Lean</title>
+<meta name="generator" content="Org mode" />
+<meta name="author" content="[[http://www.andrew.cmu.edu/user/avigad][Jeremy Avigad]]Jeremy Avigad, [[http://leodemoura.github.io][Leonardo de Moura]]Leonardo de Moura, [[https://gebner.org/][Gabriel Ebner]]Gabriel Ebner, and Sebastian Ullrich" />
+<link rel="stylesheet" href="css/tutorial.css"/>
+<link rel="stylesheet" href="css/code.css"/>
+<script type="text/javascript" charset="utf-8">if(!window.PolymerGestures) { var head = document.getElementsByTagName('head')[0]; var js = document.createElement("script"); js.type = "text/javascript"; js.src = "//cdn.jsdelivr.net/webcomponentsjs/0.7.20/webcomponents.min.js"; head.appendChild(js); } </script>
+<link rel='import' href='juicy-ace-editor.html'/>
+</head>
+<body>
+<div id="content">
+<h1 class="title">An Introduction to Lean</h1>
+
+<div id="outline-container-orgec98e19" class="outline-2">
+<h2 id="Theorem_Proving_in_Lean"><a id="orgec98e19"></a><span class="section-number-2"> 4</span> Theorem Proving in Lean</h2>
+<div class="outline-text-2" id="text-Theorem_Proving_in_Lean">
+</div>
+
+<div id="outline-container-org11202b6" class="outline-3">
+<h3 id="org11202b6"><span class="section-number-3"> 4.1</span> Assertions in Dependent Type Theory</h3>
+<div class="outline-text-3" id="text-1-1">
+<p>
+We have seen that dependent type theory is flexible enough to encode a
+broad array of data types and objects. A simple device makes it
+possible to encode any assertion you might want to make, as well:
+there is a type <code>Prop</code>, whose elements are taken to be
+propositions. The usual logical connectives are simply functions that
+take propositions and return a proposition.
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-1' mode="ace/mode/lean" readonly="true">variables p q r : Prop
+
+#check and  -- Prop → Prop → Prop
+#check or   -- Prop → Prop → Prop
+#check not  -- Prop → Prop
+
+#check p ∧ (p → r)
+#check p ∧ ¬ (q ∨ ¬ r)
+</juicy-ace-editor><div id='lean-full-code-1' style='display:none'>variables p q r : Prop
+
+#check and  -- Prop → Prop → Prop
+#check or   -- Prop → Prop → Prop
+#check not  -- Prop → Prop
+
+#check p ∧ (p → r)
+#check p ∧ ¬ (q ∨ ¬ r)
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-1').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+There is no corresponding constant for implication: if <code>p</code> and <code>q</code> are
+propositions, the arrow in <code>p → q</code> is in fact an instance of the arrow
+used to construct function spaces. We will return to this in the next
+section.
+</p>
+
+<p>
+A predicate on a type <code>α</code> is a function from <code>α</code> to <code>Prop</code>, and a
+binary relation on <code>α</code> is a function that takes two arguments in <code>α</code>
+and returns an element of <code>Prop</code>. 
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-2' mode="ace/mode/lean" readonly="true">variables p q : ℕ → Prop
+variable  r : ℕ → ℕ → Prop
+variables m n : ℕ
+
+#check p m ∧ q n
+#check p m ∧ ¬ r m n → q n 
+
+#check ∀ x, p x → q x
+#check ∀ x, ∃ y, r x y
+</juicy-ace-editor><div id='lean-full-code-2' style='display:none'>variables p q : ℕ → Prop
+variable  r : ℕ → ℕ → Prop
+variables m n : ℕ
+
+#check p m ∧ q n
+#check p m ∧ ¬ r m n → q n 
+
+#check ∀ x, p x → q x
+#check ∀ x, ∃ y, r x y
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-2').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+The universal quantifier is really an instance of the dependent
+function space construction; again, more on this in the next
+section. Lean notation supports bounded quantifiers:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-3' mode="ace/mode/lean" readonly="true">#check ∀ x ≤ n, p x → q x 
+
+variables (α : Type) (s t : list α) (a b : α) 
+
+#check ∀ x ∈ s, x ∈ t</juicy-ace-editor><div id='lean-full-code-3' style='display:none'>variables p q : ℕ → Prop
+variable  n : ℕ
+
+#check ∀ x ≤ n, p x → q x 
+
+variables (α : Type) (s t : list α) (a b : α) 
+
+#check ∀ x ∈ s, x ∈ t
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-3').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+With these resources, we can start writing substantial mathematical
+assertions:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-4' mode="ace/mode/lean" readonly="true">def dvd (m n : ℕ) : Prop := ∃ k, n = m * k
+
+instance : has_dvd ℕ := ⟨dvd⟩
+
+def even (n : ℕ) : Prop := 2 ∣ n
+
+def prime (p : ℕ) : Prop := p ≥ 2 ∧ ∀ n, n ∣ p → n = 1 ∨ n = p
+
+def Fermat : Prop := ∀ n &gt; 2, ∀ (a b c : ℕ), a ≠ 0 → b ≠ 0 → a^n + b^n ≠ c^n
+
+def Goldbach : Prop := ∀ n &gt; 2, even n → ∃ p q, prime p ∧ prime q ∧ n = p + q
+
+def twin_primes : Prop := ∀ n, ∃ p &gt; n, prime p ∧ prime (p + 2)</juicy-ace-editor><div id='lean-full-code-4' style='display:none'>namespace nat
+
+def dvd (m n : ℕ) : Prop := ∃ k, n = m * k
+
+instance : has_dvd ℕ := ⟨dvd⟩
+
+def even (n : ℕ) : Prop := 2 ∣ n
+
+def prime (p : ℕ) : Prop := p ≥ 2 ∧ ∀ n, n ∣ p → n = 1 ∨ n = p
+
+def Fermat : Prop := ∀ n &gt; 2, ∀ (a b c : ℕ), a ≠ 0 → b ≠ 0 → a^n + b^n ≠ c^n
+
+def Goldbach : Prop := ∀ n &gt; 2, even n → ∃ p q, prime p ∧ prime q ∧ n = p + q
+
+def twin_primes : Prop := ∀ n, ∃ p &gt; n, prime p ∧ prime (p + 2)
+end nat
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-4').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+Of course, what we really want are means to <i>prove</i> such assertions,
+which is what we turn to next.
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgc1ebe89" class="outline-3">
+<h3 id="orgc1ebe89"><span class="section-number-3"> 4.2</span> Propositions as Types</h3>
+<div class="outline-text-3" id="text-1-2">
+<p>
+Given the expressive power of dependent type theory, it should by now
+not be too surprisingly that the language is rich enough to encode
+proofs as well. In fact, the CIC employs a device known as the
+<code>Curry-Howard isomorphism</code>, or <code>propositions as types</code>, that makes
+writing and checking proofs especially convenient. Remember that if
+<code>φ</code> is any expression of type <code>Prop</code>, we are thinking of <code>φ</code> as a
+proposition, or an assertion. In that case, we think of an term <code>t :
+φ</code> as being a proof of <code>φ</code>. The rules of CIC support this
+interpretation: given <code>t : φ → ψ</code> and <code>s : φ</code>, then <code>t s : ψ</code>
+describes the result of using modus ponens. To construct a proof of <code>φ
+→ ψ</code>, it suffices to construct a proof of <code>t : ψ</code>, assuming
+hypothetically <code>x : φ</code>. The resulting proof is written <code>λ x, t</code>, which
+is to say, the proof is an instance of lambda abstraction.
+</p>
+
+<p>
+Similar considerations hold of the universal quantifier. The net
+effect is that we can use the same notation we use for function
+application to apply theorems to parameters and hypotheses. For
+example, the theorem <code>and.left</code> in the standard library has the
+following type:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-5' mode="ace/mode/lean" readonly="true">∀ {a b : Prop}, a ∧ b → a
+</juicy-ace-editor><div id='lean-full-code-5' style='display:none'>∀ {a b : Prop}, a ∧ b → a
+</div>
+</div>
+<p>
+Notice that the arguments <code>a</code> and <code>b</code> are implicit. This means that if
+<code>h</code> is any expression of the form <code>a ∧ b</code>, then <code>and.left h : a</code> is a
+proof of <code>a</code>. Similarly, <code>add_comm</code>, which expresses the commutativity
+of addition for any type that can be seen as an instance of an
+additive, commutative semigroup has the following type
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-6' mode="ace/mode/lean" readonly="true">∀ {α : Type u} [s : add_comm_semigroup α] (a b : α), a + b = b + a
+</juicy-ace-editor><div id='lean-full-code-6' style='display:none'>∀ {α : Type u} [s : add_comm_semigroup α] (a b : α), a + b = b + a
+</div>
+</div>
+<p>
+The second argument, that is, the relevant algebraic structure, is
+inferred by class inference. Given, say, <code>m n : ℕ</code>, the expression
+<code>add_comm m n</code> then represents the fact that <code>m + n = n + m</code>.
+</p>
+
+<p>
+Now the task of proving a proposition boils down to the task of
+constructing an expression of the right type, and Lean is designed to
+help us do this. We can provide such an expression explicitly:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-7' mode="ace/mode/lean" readonly="true">example (a b : Prop) : a ∧ b → b ∧ a :=
+λ h, and.intro (and.right h) (and.left h)
+</juicy-ace-editor><div id='lean-full-code-7' style='display:none'>example (a b : Prop) : a ∧ b → b ∧ a :=
+λ h, and.intro (and.right h) (and.left h)
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-7').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+We can use projections and anonymous constructors to express the proof
+even more concisely, though somewhat cryptically:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-8' mode="ace/mode/lean" readonly="true">example (a b : Prop) : a ∧ b → b ∧ a :=
+λ h, ⟨h.right, h.left⟩
+</juicy-ace-editor><div id='lean-full-code-8' style='display:none'>example (a b : Prop) : a ∧ b → b ∧ a :=
+λ h, ⟨h.right, h.left⟩
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-8').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+In the opposite direction, Lean provides syntactic sugar that allows
+us to annotation assumptions and goals, and build a proof
+incrementally:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-9' mode="ace/mode/lean" readonly="true">example (a b : Prop) : a ∧ b → b ∧ a :=
+assume h : a ∧ b, 
+have ha : a, from and.left h,
+have hb : b, from and.right h,
+show b ∧ a, from and.intro hb ha
+</juicy-ace-editor><div id='lean-full-code-9' style='display:none'>example (a b : Prop) : a ∧ b → b ∧ a :=
+assume h : a ∧ b, 
+have ha : a, from and.left h,
+have hb : b, from and.right h,
+show b ∧ a, from and.intro hb ha
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-9').text());">Try it yourself &raquo;</button></div>
+</div>
+
+<p>
+You can write proofs incrementally using <code>sorry</code> to temporarily fill
+in any intermediate step.
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-10' mode="ace/mode/lean" readonly="true">example (a b : Prop) : a ∧ b → b ∧ a :=
+assume h : a ∧ b, 
+have ha : a, from sorry,
+have hb : b, from sorry,
+show b ∧ a, from and.intro hb ha
+</juicy-ace-editor><div id='lean-full-code-10' style='display:none'>example (a b : Prop) : a ∧ b → b ∧ a :=
+assume h : a ∧ b, 
+have ha : a, from sorry,
+have hb : b, from sorry,
+show b ∧ a, from and.intro hb ha
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-10').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+Lean notices that you are cheating, but will otherwise confirm that
+the proof is correct modulo the instances of <code>sorry</code>. Replacing one of
+them by an underscore tells Lean that it should infer the value of
+that expression. Lean's elaborator will not prove propositions for us
+without explicit instructions to do so, but the error message will show
+you exactly what needs to be proved, and what hypotheses are
+available.
+</p>
+
+<p>
+Lean supports the use of <code>tactics</code>, which are instructions which tell
+the system how to construct a term or proof.
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-11' mode="ace/mode/lean" readonly="true">example (a b : Prop) : a ∧ b → b ∧ a :=
+begin 
+  intro h, cases h, split, 
+  repeat { assumption } 
+end
+</juicy-ace-editor><div id='lean-full-code-11' style='display:none'>example (a b : Prop) : a ∧ b → b ∧ a :=
+begin 
+  intro h, cases h, split, 
+  repeat { assumption } 
+end
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-11').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+These commands can be used to invoke automation, like the simplifier:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-12' mode="ace/mode/lean" readonly="true">example (a b : Prop) : a ∧ b → b ∧ a :=
+begin intro, simp_using_hs end
+</juicy-ace-editor><div id='lean-full-code-12' style='display:none'>example (a b : Prop) : a ∧ b → b ∧ a :=
+begin intro, simp_using_hs end
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-12').text());">Try it yourself &raquo;</button></div>
+</div>
+
+<p>
+Anywhere Lean's parser expects an expression, you can enter tactic
+mode with a <code>begin ... end</code> block, or with the <code>by</code> keyword. 
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-13' mode="ace/mode/lean" readonly="true">example (a b : Prop) : a ∧ b → b ∧ a :=
+assume h : a ∧ b, 
+have ha : a, from h.left,
+have hb : b, from h.right,
+show b ∧ a, 
+  begin split, repeat { assumption } end
+</juicy-ace-editor><div id='lean-full-code-13' style='display:none'>example (a b : Prop) : a ∧ b → b ∧ a :=
+assume h : a ∧ b, 
+have ha : a, from h.left,
+have hb : b, from h.right,
+show b ∧ a, 
+  begin split, repeat { assumption } end
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-13').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+Conversely, in a <code>begin ... end</code> block, Lean provides various ways of
+specifying an explicit term:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-14' mode="ace/mode/lean" readonly="true">example (a b : Prop) : a ∧ b → b ∧ a :=
+begin 
+  intro h, cases h with ha hb,
+  exact and.intro hb ha
+end
+</juicy-ace-editor><div id='lean-full-code-14' style='display:none'>example (a b : Prop) : a ∧ b → b ∧ a :=
+begin 
+  intro h, cases h with ha hb,
+  exact and.intro hb ha
+end
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-14').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+We can even pass back and forth between the two modes freely:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-15' mode="ace/mode/lean" readonly="true">example (a b : Prop) : a ∧ b → b ∧ a :=
+begin 
+  intro h, cases h with ha hb,
+  exact and.intro (by assumption) (by assumption)
+end
+</juicy-ace-editor><div id='lean-full-code-15' style='display:none'>example (a b : Prop) : a ∧ b → b ∧ a :=
+begin 
+  intro h, cases h with ha hb,
+  exact and.intro (by assumption) (by assumption)
+end
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-15').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+This lets us write proofs in a manner that lays out the structure
+explicitly and provides briefer hints and instructions where
+appropriate, just as in an ordinary mathematical proof.
+</p>
+
+<p>
+When writing proof terms explicitly, Lean provides the word <code>suppose</code>
+to introduce an assumption without a label, and the label can be
+ommitted in the <code>have</code> command as well. In this case, we can refer to
+the anonymous fact that was most recently added to the context with
+the keyword <code>this</code>. We can also refer to them by surrounding the
+statement of the proposition with French quotes, obtained by typing
+<code>\f&lt;</code> and <code>\f&gt;</code>.
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-16' mode="ace/mode/lean" readonly="true">example (a b : Prop) : a ∧ b → b ∧ a :=
+suppose a ∧ b,
+have a, from this.left,
+have b, from ‹a ∧ b›.right,
+show b ∧ a, from and.intro ‹b› ‹a›
+</juicy-ace-editor><div id='lean-full-code-16' style='display:none'>example (a b : Prop) : a ∧ b → b ∧ a :=
+suppose a ∧ b,
+have a, from this.left,
+have b, from ‹a ∧ b›.right,
+show b ∧ a, from and.intro ‹b› ‹a›
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-16').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+These anonymous elements of the context are also visible to tactics
+and automation:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-17' mode="ace/mode/lean" readonly="true">example (a b : Prop) : a ∧ b → b ∧ a :=
+suppose a ∧ b,
+have a, from this.left,
+have b, from ‹a ∧ b›.right,
+show b ∧ a, begin split, repeat { assumption } end
+
+example (a b : Prop) : a ∧ b → b ∧ a :=
+suppose a ∧ b,
+have a, from this.left,
+have b, from ‹a ∧ b›.right,
+show b ∧ a, by simp_using_hs
+</juicy-ace-editor><div id='lean-full-code-17' style='display:none'>example (a b : Prop) : a ∧ b → b ∧ a :=
+suppose a ∧ b,
+have a, from this.left,
+have b, from ‹a ∧ b›.right,
+show b ∧ a, begin split, repeat { assumption } end
+
+example (a b : Prop) : a ∧ b → b ∧ a :=
+suppose a ∧ b,
+have a, from this.left,
+have b, from ‹a ∧ b›.right,
+show b ∧ a, by simp_using_hs
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-17').text());">Try it yourself &raquo;</button></div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org7ab4101" class="outline-3">
+<h3 id="org7ab4101"><span class="section-number-3"> 4.3</span> Induction and Calculation</h3>
+<div class="outline-text-3" id="text-1-3">
+<p>
+Because inductive types are so fundamental, Lean's proof language
+provides a number of ways of carrying out proofs by induction.
+Suppose, for example, we define exponentiation generically in any
+monoid.
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-18' mode="ace/mode/lean" readonly="true">universe u
+variable {α : Type u}
+variable [monoid α]
+
+open nat
+
+def pow (a : α) : ℕ → α
+| 0       := 1
+| (n + 1) := a * pow n
+
+infix `^` := pow
+
+theorem pow_zero (a : α) : a^0 = 1 := rfl
+
+theorem pow_succ (a : α) (n : ℕ) : a^(succ n) = a * a^n := rfl</juicy-ace-editor><div id='lean-full-code-18' style='display:none'>namespace hide
+
+universe u
+variable {α : Type u}
+variable [monoid α]
+
+open nat
+
+def pow (a : α) : ℕ → α
+| 0       := 1
+| (n + 1) := a * pow n
+
+infix `^` := pow
+
+theorem pow_zero (a : α) : a^0 = 1 := rfl
+
+theorem pow_succ (a : α) (n : ℕ) : a^(succ n) = a * a^n := rfl
+
+end hide
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-18').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+We use the rewrite tactic <code>rw</code> to rewrite an expression with a
+sequence of identities.
+</p>
+
+<p>
+The theorem <code>pow_succ</code> states that <code>a^(succ n) = a * a^n</code>. The monoid
+in question is not assumed to be commutative, so it requires a proof
+by induction to show that <code>a^(succ n) = a^n * a</code>.
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-19' mode="ace/mode/lean" readonly="true">theorem pow_succ' (a : α) (n : ℕ) : a^(succ n) = a^n * a :=
+nat.rec_on n
+  (show a^(succ 0) = a^0 * a, 
+    by simp [pow_zero, one_mul, pow_succ])
+  (take n,
+    assume ih : a^(succ n) = a^n * a,
+    show a^(succ (succ n)) = a^(succ n) * a,
+      by rw [pow_succ, ih, -mul_assoc, -pow_succ, ih])</juicy-ace-editor><div id='lean-full-code-19' style='display:none'>namespace hide
+universe u
+variable {α : Type u}
+variable [monoid α]
+
+open nat
+
+def pow (a : α) : ℕ → α
+| 0       := 1
+| (n + 1) := a * pow n
+
+infix `^` := pow
+
+theorem pow_zero (a : α) : a^0 = 1 := rfl
+
+theorem pow_succ (a : α) (n : ℕ) : a^(succ n) = a * a^n := rfl
+
+theorem pow_succ' (a : α) (n : ℕ) : a^(succ n) = a^n * a :=
+nat.rec_on n
+  (show a^(succ 0) = a^0 * a, 
+    by simp [pow_zero, one_mul, pow_succ])
+  (take n,
+    assume ih : a^(succ n) = a^n * a,
+    show a^(succ (succ n)) = a^(succ n) * a,
+      by rw [pow_succ, ih, -mul_assoc, -pow_succ, ih])
+
+end hide
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-19').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+By propositions as types, the same principle <code>nat.rec_on</code> governs both
+induction and recursion on the natural numbers, and works as you would
+expect: you prove the base case, and then carry out the induction
+step. Lean has a special proof mode, <code>calc</code>, that facilitates writing
+calculational proofs. It can be used in this case to make the argument
+more readable:
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-20' mode="ace/mode/lean" readonly="true">theorem pow_succ' (a : α) (n : ℕ) : a^(succ n) = a^n * a :=
+nat.rec_on n
+  (show a^(succ 0) = a^0 * a, 
+    by simp [pow_zero, one_mul, pow_succ])
+  (take n,
+    assume ih : a^(succ n) = a^n * a,
+    show a^(succ (succ n)) = a^(succ n) * a, from
+      calc
+        a^(succ (succ n)) = a * a^(succ n) : by rw pow_succ
+                      ... = a * (a^n * a)  : by rw ih
+                      ... = (a * a^n) * a  : by rw mul_assoc
+                      ... = a^(succ n) * a : by rw -pow_succ)</juicy-ace-editor><div id='lean-full-code-20' style='display:none'>namespace hide
+universe u
+variable {α : Type u}
+variable [monoid α]
+
+open nat
+
+def pow (a : α) : ℕ → α
+| 0       := 1
+| (n + 1) := a * pow n
+
+infix `^` := pow
+
+theorem pow_zero (a : α) : a^0 = 1 := rfl
+
+theorem pow_succ (a : α) (n : ℕ) : a^(succ n) = a * a^n := rfl
+
+theorem pow_succ' (a : α) (n : ℕ) : a^(succ n) = a^n * a :=
+nat.rec_on n
+  (show a^(succ 0) = a^0 * a, 
+    by simp [pow_zero, one_mul, pow_succ])
+  (take n,
+    assume ih : a^(succ n) = a^n * a,
+    show a^(succ (succ n)) = a^(succ n) * a, from
+      calc
+        a^(succ (succ n)) = a * a^(succ n) : by rw pow_succ
+                      ... = a * (a^n * a)  : by rw ih
+                      ... = (a * a^n) * a  : by rw mul_assoc
+                      ... = a^(succ n) * a : by rw -pow_succ)
+
+end hide
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-20').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+The <code>calc</code> mode can be used with inequalities and transitive relations
+that have been registered with the system.
+</p>
+
+<p>
+By the propositions-as-types correspondence, induction is just a form
+of recursion, and so the function definition system can be used to
+write proofs by induction as well.
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-21' mode="ace/mode/lean" readonly="true">theorem pow_succ' (a : α) : ∀ n, a^(succ n) = a^n * a
+| 0        := by simp [pow_zero, one_mul, pow_succ]
+| (succ n) := by rw [pow_succ, pow_succ' n, -mul_assoc,
+                       -pow_succ, pow_succ' n]</juicy-ace-editor><div id='lean-full-code-21' style='display:none'>namespace hide
+universe u
+variable {α : Type u}
+variable [monoid α]
+
+open nat
+
+def pow (a : α) : ℕ → α
+| 0       := 1
+| (n + 1) := a * pow n
+
+infix `^` := pow
+
+theorem pow_zero (a : α) : a^0 = 1 := rfl
+
+theorem pow_succ (a : α) (n : ℕ) : a^(succ n) = a * a^n := rfl
+
+theorem pow_succ' (a : α) : ∀ n, a^(succ n) = a^n * a
+| 0        := by simp [pow_zero, one_mul, pow_succ]
+| (succ n) := by rw [pow_succ, pow_succ' n, -mul_assoc,
+                       -pow_succ, pow_succ' n]
+
+end hide
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-21').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+Here the rewrite tactic uses the inductive hypothesis <code>pow_succ'
+n</code>. In an inductive proof like this, structurally decreasing calls can
+be used.
+</p>
+
+<p>
+Finally, one can write a tactic proof using the <code>induction</code> tactic,
+which will revert any hypotheses in the context that depend on the
+induction variable and then generalize them again. The <code>with</code> clause
+names the variable used in the inductive step, as well as the
+inductive hypothesis. 
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-22' mode="ace/mode/lean" readonly="true">theorem pow_succ' (a : α) (n : ℕ) : a^(succ n) = a^n * a :=
+begin
+  induction n with n ih,
+  { simp [pow_zero, one_mul, pow_succ] },
+  rw [pow_succ, ih, -mul_assoc, -pow_succ, ih]
+end</juicy-ace-editor><div id='lean-full-code-22' style='display:none'>namespace hide
+universe u
+variable {α : Type u}
+variable [monoid α]
+
+open nat
+
+def pow (a : α) : ℕ → α
+| 0       := 1
+| (n + 1) := a * pow n
+
+infix `^` := pow
+
+theorem pow_zero (a : α) : a^0 = 1 := rfl
+
+theorem pow_succ (a : α) (n : ℕ) : a^(succ n) = a * a^n := rfl
+
+theorem pow_succ' (a : α) (n : ℕ) : a^(succ n) = a^n * a :=
+begin
+  induction n with n ih,
+  { simp [pow_zero, one_mul, pow_succ] },
+  rw [pow_succ, ih, -mul_assoc, -pow_succ, ih]
+end
+
+end hide
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-22').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+Here is another example of proof that uses the induction tactic.
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-23' mode="ace/mode/lean" readonly="true">theorem pow_add (a : α) (m n : ℕ) : a^(m + n) = a^m * a^n :=
+begin
+  induction n with n ih,
+  { simp [add_zero, pow_zero, mul_one] },
+  rw [add_succ, pow_succ', ih, pow_succ', mul_assoc]
+end</juicy-ace-editor><div id='lean-full-code-23' style='display:none'>namespace hide
+universe u
+variable {α : Type u}
+variable [monoid α]
+
+open nat
+
+def pow (a : α) : ℕ → α
+| 0       := 1
+| (n + 1) := a * pow n
+
+infix `^` := pow
+
+theorem pow_zero (a : α) : a^0 = 1 := rfl
+
+theorem pow_succ (a : α) (n : ℕ) : a^(succ n) = a * a^n := rfl
+
+theorem pow_succ' (a : α) (n : ℕ) : a^(succ n) = a^n * a :=
+begin
+  induction n with n ih,
+  { simp [pow_zero, one_mul, pow_succ] },
+  rw [pow_succ, ih, -mul_assoc, -pow_succ, ih]
+end
+
+theorem pow_add (a : α) (m n : ℕ) : a^(m + n) = a^m * a^n :=
+begin
+  induction n with n ih,
+  { simp [add_zero, pow_zero, mul_one] },
+  rw [add_succ, pow_succ', ih, pow_succ', mul_assoc]
+end
+
+end hide
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-23').text());">Try it yourself &raquo;</button></div>
+</div>
+
+<p>
+Recall the recursive definitions of the <code>append</code> and <code>length</code>
+functions for lists from <a href="#" onclick="myModule.loadTutorial('03_Programming_in_Lean.html', 'Recursive_Definitions')">Section 3.2</a>.
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-24' mode="ace/mode/lean" readonly="true">def append : list α → list α → list α
+| []       l := l
+| (h :: s) t := h :: (append s t)
+
+def length : list α → nat
+| []       := 0
+| (a :: l) := length l + 1</juicy-ace-editor><div id='lean-full-code-24' style='display:none'>namespace hide
+open list
+
+universe u
+variable {α : Type u}
+
+def append : list α → list α → list α
+| []       l := l
+| (h :: s) t := h :: (append s t)
+
+def length : list α → nat
+| []       := 0
+| (a :: l) := length l + 1
+
+end hide
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-24').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+The natural way to prove things about these is to use induction on
+lists. Here are some examples.
+</p>
+<div class="org-src-container">
+<juicy-ace-editor id='lean-juicy-ace-editor-25' mode="ace/mode/lean" readonly="true">theorem append_nil (t : list α) : t ++ [] = t :=
+begin induction t with a t ih, reflexivity, simp [nil_append, cons_append, ih] end
+
+theorem append.assoc (s t u : list α) : s ++ t ++ u = s ++ (t ++ u) :=
+begin induction s with a s ih, reflexivity, simp [cons_append, ih] end
+
+theorem length_append (s t : list α) : length (s ++ t) = length s + length t :=
+begin 
+  induction s with a s ih, 
+  simp [nil_append, length], 
+  simp [length_cons, cons_append, ih] 
+end
+
+theorem eq_nil_of_length_eq_zero : ∀ {l : list α}, length l = 0 → l = []
+| []     h := rfl
+| (a::s) h := by contradiction
+
+theorem ne_nil_of_length_eq_succ : ∀ {l : list α} {n : nat}, length l = succ n → l ≠ []
+| []     n h := by contradiction
+| (a::l) n h := begin intro leq, contradiction end</juicy-ace-editor><div id='lean-full-code-25' style='display:none'>universe u
+variable {α : Type u}
+
+open nat list
+
+theorem append_nil (t : list α) : t ++ [] = t :=
+begin induction t with a t ih, reflexivity, simp [nil_append, cons_append, ih] end
+
+theorem append.assoc (s t u : list α) : s ++ t ++ u = s ++ (t ++ u) :=
+begin induction s with a s ih, reflexivity, simp [cons_append, ih] end
+
+theorem length_append (s t : list α) : length (s ++ t) = length s + length t :=
+begin 
+  induction s with a s ih, 
+  simp [nil_append, length], 
+  simp [length_cons, cons_append, ih] 
+end
+
+theorem eq_nil_of_length_eq_zero : ∀ {l : list α}, length l = 0 → l = []
+| []     h := rfl
+| (a::s) h := by contradiction
+
+theorem ne_nil_of_length_eq_succ : ∀ {l : list α} {n : nat}, length l = succ n → l ≠ []
+| []     n h := by contradiction
+| (a::l) n h := begin intro leq, contradiction end
+</div><div class='no-print' align="left"><button type="button" onclick="invoke_leanjs($('#lean-full-code-25').text());">Try it yourself &raquo;</button></div>
+</div>
+<p>
+The first three are tactic-style proofs, whereas the last two use the
+function definition package
+</p>
+</div>
+</div>
+
+<div id="outline-container-org7d8fa6a" class="outline-3">
+<h3 id="org7d8fa6a"><span class="section-number-3"> 4.4</span> Axioms</h3>
+<div class="outline-text-3" id="text-1-4">
+<p>
+[To do: describe all the axioms of Lean, including classical axioms.]
+</p>
+</div>
+</div>
+</div>
+</div>
+</body>
+</html>
