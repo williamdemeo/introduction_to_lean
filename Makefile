@@ -1,4 +1,4 @@
-MKLEANBOOK_PATH := $(PWD)/mkleanbook
+MKLEANBOOK_PATH := ../mkleanbook
 
 AUTHORS = Jeremy Avigad, Leonardo de Moura, Gabriel Ebner, and Sebastian Ullrich
 TITLE = An Introduction to Lean
